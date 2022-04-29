@@ -1,26 +1,27 @@
 import tensorflow.compat.v1 as tf
 import numpy as np
 import re
+import collections
 
 import Utils
 from Utils import printD
 
 
-class Reuters8:
+class Reuters52:
 
     def __init__(self):
-        self.train_file = './Baseline/Categorization/data/r8-train.txt'
-        self.test_file = './Baseline/Categorization/data/r8-test.txt'
+        self.train_file = './Baseline/Categorization/data/r52-train.txt'
+        self.test_file = './Baseline/Categorization/data/r52-test.txt'
         self.batch_size = 32
         self.vocab_size = 1000
         self.num_epochs = 5
         self.n_hidden = 512
-        self.nclasses_to_exclude = 2  # 0-3
+        self.nclasses_to_exclude = 12  # 0-3
         np.random.seed(0)
-        random_classes = np.arange(8)
+        random_classes = np.arange(52)
         np.random.shuffle(random_classes)
-        self.to_include = list(random_classes[:8 - self.nclasses_to_exclude])
-        self.to_exclude = list(random_classes[8 - self.nclasses_to_exclude:])
+        self.to_include = list(random_classes[:52 - self.nclasses_to_exclude])
+        self.to_exclude = list(random_classes[52 - self.nclasses_to_exclude:])
 
     @staticmethod
     def load_data(filename):
@@ -29,6 +30,15 @@ class Reuters8:
         :return: the text (x) and its label (y)
                  the text is a list of words and is not processed
         '''
+
+        topic_to_num = {"acq": 0, "alum": 1, "bop": 2, "carcass": 3, "cocoa": 4, "coffee": 5, "copper": 6,
+                        "cotton": 7, "cpi": 8, "cpu": 9, "crude": 10, "dlr": 11, "earn": 12, "fuel": 13, "gas": 14,
+                        "gnp": 15, "gold": 16, "grain": 17, "heat": 18, "housing": 19, "income": 20, "instal-debt": 21,
+                        "interest": 22, "ipi": 23, "iron-steel": 24, "jet": 25, "jobs": 26, "lead": 27, "lei": 28,
+                        "livestock": 29, "lumber": 30, "meal-feed": 31, "money-fx": 32, "money-supply": 33,
+                        "nat-gas": 34, "nickel": 35, "orange": 36, "pet-chem": 37, "platinum": 38, "potato": 39,
+                        "reserves": 40, "retail": 41, "rubber": 42, "ship": 43, "strategic-metal": 44, "sugar": 45,
+                        "tea": 46, "tin": 47, "trade": 48, "veg-oil": 49, "wpi": 50, "zinc": 51}
 
         # stop words taken from nltk
         stop_words = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
@@ -49,15 +59,14 @@ class Reuters8:
         x, y = [], []
         with open(filename, "r") as f:
             for line in f:
-                line = re.sub(r'\W+', ' ', line).strip()
-                x.append(line[1:])
-                x[-1] = ' '.join(word for word in x[-1].split() if word not in stop_words)
-                y.append(line[0])
+                line = re.sub(r'\s+', ' ', line).strip()
+                current_story = ' '.join(word for word in line.split(' ')[1:] if word not in stop_words)
+                x.append(current_story)
+                y.append(topic_to_num[line.split(' ')[0]])
         return x, np.array(y, dtype=int)
 
-
     def get_data(self):
-        printD('Loading Reuters8 Data')
+        printD('Loading Reuters52 Data')
         X_train, Y_train = self.load_data(self.train_file)
         X_test, Y_test = self.load_data(self.test_file)
 
@@ -76,35 +85,23 @@ class Reuters8:
         X_test = X_test[indices]
         Y_test = Y_test[indices]
 
-        # split into train/dev
-        X_dev = X_train[-500:]
-        Y_dev = Y_train[-500:]
-        X_train = X_train[:-500]
-        Y_train = Y_train[:-500]
-
         in_sample_examples, in_sample_labels, oos_examples, oos_labels = \
             Utils.partition_data_in_two(X_train, Y_train, self.to_include, self.to_exclude)
-        dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels = \
-            Utils.partition_data_in_two(X_dev, Y_dev, self.to_include, self.to_exclude)
         test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = \
             Utils.partition_data_in_two(X_test, Y_test, self.to_include, self.to_exclude)
 
         # safely assumes there is an example for each in_sample class in both the training and dev class
         in_sample_labels = Utils.relabel_in_sample_labels(in_sample_labels)
-        dev_in_sample_labels = Utils.relabel_in_sample_labels(dev_in_sample_labels)
         test_in_sample_labels = Utils.relabel_in_sample_labels(test_in_sample_labels)
 
-        printD('Reuters8 Data loaded')
-
+        printD('Reuters52 Data loaded')
         return in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-               dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels, \
-               test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels
+               dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels
 
     def train_model(self):
 
         in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-        dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels, \
-        test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = self.get_data()
+        dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = self.get_data()
 
         num_examples = in_sample_labels.shape[0]
         num_batches = num_examples // self.batch_size
@@ -129,8 +126,8 @@ class Reuters8:
                         lambda: gelu_fast(tf.matmul(x, W_h) + b_h))
 
             W_out = tf.Variable(
-                tf.nn.l2_normalize(tf.random_normal([self.n_hidden, 8 - self.nclasses_to_exclude]), 0) / tf.sqrt(0.45 + 1))
-            b_out = tf.Variable(tf.zeros([8 - self.nclasses_to_exclude]))
+                tf.nn.l2_normalize(tf.random_normal([self.n_hidden, 52 - self.nclasses_to_exclude]), 0) / tf.sqrt(0.45 + 1))
+            b_out = tf.Variable(tf.zeros([52 - self.nclasses_to_exclude]))
 
             logits = tf.matmul(h, W_out) + b_out
 
@@ -148,8 +145,6 @@ class Reuters8:
         # create saver to train model
         saver = tf.train.Saver(max_to_keep=1)
 
-        best_acc = 0
-
         for epoch in range(self.num_epochs):
             # shuffle data every epoch
             indices = np.arange(num_examples)
@@ -166,20 +161,6 @@ class Reuters8:
                 _, l, batch_acc = sess.run([optimizer, loss, acc],
                                            feed_dict={x: x_batch, y: y_batch, is_training: True})
 
-            curr_dev_acc = sess.run(
-                acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False})
-            if best_acc < curr_dev_acc:
-                best_acc = curr_dev_acc
-                saver.save(sess, "Baseline/Categorization/data/best_r8_model.ckpt")
+            return sess, saver, graph, h, x, y, is_training
 
-            print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
-                  (epoch + 1, l, batch_acc, curr_dev_acc))
 
-        # restore variables from disk
-        saver.restore(sess, "Baseline/Categorization/data/best_r8_model.ckpt")
-        print("Best model restored!")
-
-        print('Dev accuracy:',
-              sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
-
-        return sess, saver, graph, h, x, y, is_training

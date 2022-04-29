@@ -13,6 +13,8 @@ def gen_train_features(classes, in_sample_examples, in_sample_labels, sess, fel,
         in_samples_class = in_sample_examples[in_sample_labels == classID]
         train_set_features = sess.run([fel], feed_dict={x: in_samples_class, is_training: False})
         train_set_features = np.squeeze(np.asarray(train_set_features))
+        if train_set_features.ndim == 1:
+            train_set_features = np.expand_dims(train_set_features, 0)
         if SAVE:
             save_name = "{0}_train_features.npy".format(classID, train_set_features.shape[0])
             save_location = os.path.join(FEATURES_DATA_FOLDER, save_name)
@@ -46,7 +48,7 @@ def gen_ood_features(test_oos_examples, sess, fel, x, is_training):
         save_name = "ood_set_features.npy"
         save_location = os.path.join(OOD_FEATURES_DATA_FOLDER, save_name)
         np.save(save_location, ood_set_features)
-        printD("\tSaved generated test set features" + " at " + save_location + " having len - " + str(
+        printD("\tSaved generated ood set features" + " at " + save_location + " having len - " + str(
             ood_set_features.shape))
     else:
         printD("\tCalculated but didn't save ood_set_features")
@@ -142,7 +144,7 @@ def gen_test_dists_and_closest_classes():
         save_name = "test_distances.npy"
         save_location = os.path.join(DISTS_DATA_FOLDER, save_name)
         np.save(save_location, test_dists)
-        print("Saved distances for test data at " + save_location + " having shape - " + str(test_dists.shape))
+        printD("Saved distances for test data at " + save_location + " having shape - " + str(test_dists.shape))
         # closest classes
         save_name = "test_closest_classes.npy"
         save_location = os.path.join(CLOSEST_CLASS_DATA_FOLDER, save_name)
@@ -180,7 +182,7 @@ def gen_ood_dists_and_closest_classes():
         save_name = "ood_set_distances.npy"
         save_location = os.path.join(OOD_DISTS_DATA_FOLDER, save_name)
         np.save(save_location, ood_set_dists)
-        print("Saved distances for ood set data at " + save_location + " having shape - " + str(ood_set_dists.shape))
+        printD("Saved distances for ood set data at " + save_location + " having shape - " + str(ood_set_dists.shape))
         # closest classes
         save_name = "ood_set_closest_classes.npy"
         save_location = os.path.join(OOD_CLOSEST_CLASS_DATA_FOLDER, save_name)

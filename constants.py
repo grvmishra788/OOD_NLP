@@ -1,12 +1,12 @@
 import os
 
-DEBUG = True
+DEBUG = False
 SAVE = True
 
 # init names
 OUTPUT_FOLDER_NAME = "outputs"
-DATA_NAME = "Reuters6"
-OOD_DATA_NAME = "Reuters2"
+DATA_NAME = "Reuters40"
+OOD_DATA_NAME = "Reuters12"
 
 # folders
 

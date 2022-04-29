@@ -1,6 +1,5 @@
 import numpy as np
-
-import Utils
+import collections
 from constants import *
 
 
@@ -14,6 +13,78 @@ def check_path(path):
         print(f"Err: {path} doesn't exist!")
     else:
         print(f"{path} exists!")
+
+
+def get_vocab(dataset):
+    '''
+    :param dataset: the text from load_data
+
+    :return: a _ordered_ dictionary from words to counts
+    '''
+    vocab = {}
+
+    # create a counter for each word
+    for example in dataset:
+        example_as_list = example.split()
+        for word in example_as_list:
+            vocab[word] = 0
+
+    for example in dataset:
+        example_as_list = example.split()
+        for word in example_as_list:
+            vocab[word] += 1
+
+    # sort from greatest to least by count
+    return collections.OrderedDict(sorted(vocab.items(), key=lambda x: x[1], reverse=True))
+
+
+def text_to_rank(dataset, _vocab, desired_vocab_size=1000):
+    '''
+    :param dataset: the text from load_data
+    :vocab: a _ordered_ dictionary of vocab words and counts from get_vocab
+    :param desired_vocab_size: the desired vocabulary size
+    words no longer in vocab become UUUNNNKKK
+    :return: the text corpus with words mapped to their vocab rank,
+    with all sufficiently infrequent words mapped to UUUNNNKKK; UUUNNNKKK has rank desired_vocab_size
+    (the infrequent word cutoff is determined by desired_vocab size)
+    '''
+    _dataset = dataset[:]  # aliasing safeguard
+    vocab_ordered = list(_vocab)
+    count_cutoff = _vocab[vocab_ordered[desired_vocab_size - 2]]  # get word by its rank and map to its count
+
+    word_to_rank = {}
+    for i in range(len(vocab_ordered)):
+        # we add one to make room for any future padding symbol with value 0
+        word_to_rank[vocab_ordered[i]] = i
+
+    for i in range(len(_dataset)):
+        example = _dataset[i]
+        example_as_list = example.split()
+        for j in range(len(example_as_list)):
+            try:
+                if _vocab[example_as_list[j]] >= count_cutoff and word_to_rank[example_as_list[j]] < desired_vocab_size:
+                    # we need to ensure that other words below the word on the edge of our desired_vocab size
+                    # are not also on the count cutoff
+                    example_as_list[j] = word_to_rank[example_as_list[j]]
+                else:
+                    example_as_list[j] = desired_vocab_size - 1  # UUUNNNKKK
+            except:
+                example_as_list[j] = desired_vocab_size - 1  # UUUNNNKKK
+        _dataset[i] = example_as_list
+
+    return _dataset
+
+
+def text_to_matrix(dataset, _vocab, desired_vocab_size=1000):
+    sequences = text_to_rank(dataset, _vocab, desired_vocab_size)
+
+    mat = np.zeros((len(sequences), desired_vocab_size), dtype=int)
+
+    for i, seq in enumerate(sequences):
+        for token in seq:
+            mat[i][token] = 1
+
+    return mat
 
 
 def partition_data_in_two(dataset, dataset_labels, in_sample_labels, oos_labels):
@@ -118,5 +189,3 @@ def get_per_class_info(in_sample_examples, in_sample_labels, classes):
     printD(f"per_class_examples = {per_class_examples}")
     printD(f"total == len(in_sample_examples)  == ({total == len(in_sample_examples)})")
     return per_class_examples
-
-
