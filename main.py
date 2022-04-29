@@ -4,6 +4,7 @@ from Utils import printD
 from Distance import generate_arrays
 from Distance.distance_reuters8 import Reuters8
 from Distance.distance_reuters52 import Reuters52
+from Distance.distance_newsgroup20 import Newsgroup20
 
 
 def main():
@@ -13,8 +14,13 @@ def main():
     # dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels, \
     # test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = reuters8.get_data()
 
-    reuters8 = Reuters52()
+    # reuters8 = Reuters52()
+    # in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
+    # dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = reuters8.get_data()
+
+    reuters8 = Newsgroup20()
     in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
+    dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, \
     dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = reuters8.get_data()
 
     print(f"Total in-sample classes = { len(list(set(in_sample_labels))) }")

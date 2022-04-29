@@ -5,8 +5,8 @@ SAVE = True
 
 # init names
 OUTPUT_FOLDER_NAME = "outputs"
-DATA_NAME = "Reuters40"
-OOD_DATA_NAME = "Reuters12"
+DATA_NAME = "15Newsgroup"
+OOD_DATA_NAME = "5Newsgroup"
 
 # folders
 
