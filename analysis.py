@@ -35,8 +35,7 @@ def calculate_all(NUM_CLASSES):
     y_true = []
     for i in range(len(test_distances)):
         y_true.append(0)
-        class_idx = int(i / 1000)
-        if test_distances[i] > class_radii[class_idx]:
+        if test_distances[i] > class_radii[test_closest_classes[i]]:
             y_pred.append(1)
         else:
             y_pred.append(0)
