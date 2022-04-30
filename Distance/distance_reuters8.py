@@ -182,4 +182,4 @@ class Reuters8:
         print('Dev accuracy:',
               sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
 
-        return sess, saver, graph, h, x, y, is_training
+        return sess, saver, graph, h, x, y, is_training,logits
