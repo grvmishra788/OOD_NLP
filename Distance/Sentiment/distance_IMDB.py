@@ -157,7 +157,7 @@ class IMDB:
 
         print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev}))
 
-        return sess, saver, graph, pooled, x, y, is_training,logits
+        return sess, saver, graph, pooled, x, y, is_training
 
 
 
