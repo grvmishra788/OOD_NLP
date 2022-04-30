@@ -32,6 +32,20 @@ def load_ood_features():
     printD(f"ood_set_features.shape = {ood_set_features.shape}")
     return ood_set_features
 
+def load_test_logits():
+    save_name = "test_logits.npy"
+    save_location = os.path.join(FEATURES_DATA_FOLDER, save_name)
+    test_logits = np.load(save_location)
+    printD(f"test_logits.shape = {test_logits.shape}")
+    return test_logits
+
+
+def load_ood_logits():
+    save_name = "ood_set_logits.npy"
+    save_location = os.path.join(OOD_FEATURES_DATA_FOLDER, save_name)
+    ood_set_logits = np.load(save_location)
+    printD(f"ood_set_logits.shape = {ood_set_logits.shape}")
+    return ood_set_logits
 
 def load_class_means():
     save_name = "train_class_means.npy"

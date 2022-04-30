@@ -7,7 +7,8 @@ from constants import *
 from Distance import load_arrays
 import Utils
 from pprint import pprint
-
+import constants 
+from scipy.special import logsumexp
 
 def calculate_all(NUM_CLASSES):
     """## ** Check output folders**"""
@@ -30,6 +31,9 @@ def calculate_all(NUM_CLASSES):
     test_distances, test_closest_classes = load_arrays.load_test_dists_and_closest_classes()
     # load OOD distances
     ood_set_distances, ood_set_closest_classes = load_arrays.load_OOD_dists_and_closest_classes()
+
+    test_logits,ood_logits=load_arrays.load_test_logits(),load_arrays.load_ood_logits()
+    test_energy_score,ood_energy_score=calculate_energy_score(test_logits),calculate_energy_score(ood_logits)
 
     y_pred = []
     y_true = []
@@ -179,3 +183,8 @@ def calculate_AUROC(y_true, test_distances, ood_set_distances):
     plt.show()
     return roc_auc
 
+def calculate_energy_score(logits):
+    energy_score=[]
+    for l in logits:
+        energy_score.append(TEMP*logsumexp(l / TEMP))
+    return energy_score

@@ -1,5 +1,7 @@
 import os
 
+
+TEMP= 100
 DEBUG = False
 SAVE = True
 
