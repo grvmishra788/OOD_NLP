@@ -39,18 +39,6 @@ def gen_test_features(test_in_sample_examples, sess, fel, x, is_training):
     else:
         printD("\tCalculated but didn't save test_set_features")
 
-def gen_test_logits(test_in_sample_examples, sess, logits, x, is_training):
-    printD("gen_test_logits():")
-    test_set_logits = sess.run([logits], feed_dict={x: test_in_sample_examples, is_training: False})
-    test_set_logits = np.squeeze(np.asarray(test_set_logits))
-    if SAVE:
-        save_name = "test_logits.npy"
-        save_location = os.path.join(FEATURES_DATA_FOLDER, save_name)
-        np.save(save_location, test_set_logits)
-        printD("\tSaved generated test_set_logits" + " at " + save_location + " having len - " + str(
-            test_set_logits.shape))
-    else:
-        printD("\tCalculated but didn't save test_set_logits")
 
 def gen_ood_features(test_oos_examples, sess, fel, x, is_training):
     printD("gen_ood_features():")
@@ -65,18 +53,6 @@ def gen_ood_features(test_oos_examples, sess, fel, x, is_training):
     else:
         printD("\tCalculated but didn't save ood_set_features")
 
-def gen_ood_logits(test_oos_examples, sess, logits, x, is_training):
-    printD("gen_ood_logits():")
-    ood_set_logits = sess.run([logits], feed_dict={x: test_oos_examples, is_training: False})
-    ood_set_logits = np.squeeze(np.asarray(ood_set_logits))
-    if SAVE:
-        save_name = "ood_set_logits.npy"
-        save_location = os.path.join(OOD_FEATURES_DATA_FOLDER, save_name)
-        np.save(save_location, ood_set_logits)
-        printD("\tSaved generated ood set features" + " at " + save_location + " having len - " + str(
-            ood_set_logits.shape))
-    else:
-        printD("\tCalculated but didn't save ood_set_logits")
 
 def gen_class_means(classes):
     printD("gen_class_means():")
@@ -242,7 +218,7 @@ def gen_radii(classes, per_class_examples):
         printD("\tCalculated but didn't save class_radii")
 
 
-def gen_all(classes, per_class_examples, in_sample_examples, in_sample_labels, test_in_sample_examples, test_oos_examples, sess, fel, x, y, is_training,logits):
+def gen_all(classes, per_class_examples, in_sample_examples, in_sample_labels, test_in_sample_examples, test_oos_examples, sess, fel, x, y, is_training):
     gen_train_features(classes, in_sample_examples, in_sample_labels, sess, fel, x, is_training)
     gen_test_features(test_in_sample_examples, sess, fel, x, is_training)
     gen_ood_features(test_oos_examples, sess, fel, x,is_training)
@@ -251,5 +227,3 @@ def gen_all(classes, per_class_examples, in_sample_examples, in_sample_labels, t
     gen_test_dists_and_closest_classes()
     gen_ood_dists_and_closest_classes()
     gen_radii(classes, per_class_examples)
-    gen_test_logits(test_in_sample_examples, sess, logits, x, is_training)
-    gen_ood_logits(test_oos_examples, sess, logits, x, is_training)

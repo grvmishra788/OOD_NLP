@@ -180,4 +180,4 @@ class Newsgroup20:
 
         print('Dev accuracy:', sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels}))
 
-        return sess, saver, graph, pooled, x, y, is_training,logits
+        return sess, saver, graph, pooled, x, y, is_training
