@@ -161,6 +161,6 @@ class Reuters52:
                 _, l, batch_acc = sess.run([optimizer, loss, acc],
                                            feed_dict={x: x_batch, y: y_batch, is_training: True})
 
-            return sess, saver, graph, h, x, y, is_training
+            return sess, saver, graph, h, x, y, is_training,logits
 
 
