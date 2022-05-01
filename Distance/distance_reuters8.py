@@ -86,25 +86,27 @@ class Reuters8:
             Utils.partition_data_in_two(X_train, Y_train, self.to_include, self.to_exclude)
         dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels = \
             Utils.partition_data_in_two(X_dev, Y_dev, self.to_include, self.to_exclude)
-        test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = \
+        test_in_sample_examples, test_in_sample_labels, test_oos_examples, test_oos_labels = \
             Utils.partition_data_in_two(X_test, Y_test, self.to_include, self.to_exclude)
 
         # safely assumes there is an example for each in_sample class in both the training and dev class
         in_sample_labels = Utils.relabel_in_sample_labels(in_sample_labels)
         dev_in_sample_labels = Utils.relabel_in_sample_labels(dev_in_sample_labels)
         test_in_sample_labels = Utils.relabel_in_sample_labels(test_in_sample_labels)
+    
+        # use all ood examples
+        oos_examples = np.concatenate((oos_examples, dev_oos_examples, test_oos_examples), axis=0)
+        oos_labels = np.concatenate((oos_labels, dev_oos_labels, test_oos_labels), axis=0)
 
         printD('Reuters8 Data loaded')
 
-        return in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-               dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels, \
-               test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels
+        return in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+               dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels
 
     def train_model(self):
 
-        in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-        dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels, \
-        test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = self.get_data()
+        in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+        dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = self.get_data()
 
         num_examples = in_sample_labels.shape[0]
         num_batches = num_examples // self.batch_size
@@ -141,6 +143,9 @@ class Reuters8:
             optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss, global_step=global_step)
 
             acc = 100 * tf.reduce_mean(tf.to_float(tf.equal(tf.argmax(logits, 1), y)))
+
+            s = tf.nn.softmax(logits)
+            kl_all = tf.log(8. - self.nclasses_to_exclude) + tf.reduce_sum(s * tf.log(tf.abs(s) + 1e-10), reduction_indices=[1], keep_dims=True)
 
         # initialize
         sess = tf.InteractiveSession(graph=graph)
@@ -182,4 +187,7 @@ class Reuters8:
         print('Dev accuracy:',
               sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
 
-        return sess, saver, graph, h, x, y, is_training,logits
+        kl_a = sess.run([kl_all], feed_dict={x: in_sample_examples, y: in_sample_labels,  is_training: False})
+        kl_oos = sess.run([kl_all], feed_dict={x: oos_examples,  is_training: False})
+
+        return sess, saver, graph, h, logits, x, y, is_training, kl_a[0], kl_oos[0]

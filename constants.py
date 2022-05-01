@@ -1,8 +1,8 @@
 import os
 
 
-TEMP= 100
-DEBUG = False
+TEMP = 100
+DEBUG = True
 SAVE = True
 
 # init names
@@ -40,3 +40,9 @@ MEANS_DATA_FOLDER = os.path.join(MEANS_FOLDER, DATA_NAME)
 # init radius folders
 RADIUS_FOLDER = os.path.join(OUTPUT_FOLDER_NAME, "radius")
 RADIUS_DATA_FOLDER = os.path.join(RADIUS_FOLDER, DATA_NAME)
+
+
+def set_data_names(dataset, ood_dataset):
+    global DATA_NAME, OOD_DATA_NAME
+    DATA_NAME = dataset
+    OOD_DATA_NAME = ood_dataset

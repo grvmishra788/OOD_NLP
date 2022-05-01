@@ -142,6 +142,10 @@ class Newsgroup20:
 
             acc = 100 * tf.reduce_mean(tf.to_float(tf.equal(tf.argmax(logits, 1), y)))
 
+            s = tf.nn.softmax(logits)
+            kl_all = tf.log(20. - self.nclasses_to_exclude) + tf.reduce_sum(s * tf.log(tf.abs(s) + 1e-10),
+                                                                           reduction_indices=[1], keep_dims=True)
+
         # initialize
         sess = tf.InteractiveSession(graph=graph)
         tf.initialize_all_variables().run()
@@ -169,15 +173,18 @@ class Newsgroup20:
                 acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels})
             if best_acc < curr_dev_acc:
                 best_acc = curr_dev_acc
-                saver.save(sess, './data/best_newsgroup_model.ckpt')
+                saver.save(sess, './Baseline/Categorization/data/best_newsgroup_model.ckpt')
 
             print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
                   (epoch + 1, l, batch_acc, curr_dev_acc))
 
         # restore variables from disk
-        saver.restore(sess, "./data/best_newsgroup_model.ckpt")
+        saver.restore(sess, "./Baseline/Categorization/data/best_newsgroup_model.ckpt")
         print("Best model restored!")
 
         print('Dev accuracy:', sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels}))
 
-        return sess, saver, graph, pooled, x, y, is_training,logits
+        kl_a = sess.run([kl_all], feed_dict={x: in_sample_examples, y: in_sample_labels, is_training: False})
+        kl_oos = sess.run([kl_all], feed_dict={x: oos_examples, is_training: False})
+
+        return sess, saver, graph, pooled, logits, x, y, is_training, kl_a[0], kl_oos[0]

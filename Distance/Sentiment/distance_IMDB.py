@@ -86,7 +86,7 @@ class IMDB:
         rt_data = Utils.text_to_rank(rt_data, vocab, 5000)
         rt_data = Utils.pad_sequences(rt_data, maxlen=self.max_example_len)
 
-        print('IMDB Data loaded')
+        printD('IMDB Data loaded')
         return X_train, Y_train, X_dev, Y_dev, X_test, Y_test, cr_data, cr_labels, rt_data, rt_labels
 
     def train_model(self):
@@ -117,6 +117,10 @@ class IMDB:
             loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=y))
             optimizer = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(loss)
             acc = 100 * tf.reduce_mean(tf.to_float(tf.equal(tf.argmax(logits, 1), y)))
+
+            s = tf.nn.softmax(logits)
+            kl_all = tf.log(2.) + tf.reduce_sum(s * tf.log(tf.abs(s) + 1e-10),
+                                                                           reduction_indices=[1], keep_dims=True)
 
         # initialize
         sess = tf.InteractiveSession(graph=graph)
@@ -157,7 +161,11 @@ class IMDB:
 
         print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev}))
 
-        return sess, saver, graph, pooled, x, y, is_training,logits
+        kl_a = sess.run([kl_all], feed_dict={x: X_test, y: Y_test, is_training: False})
+        kl_oos1 = sess.run([kl_all], feed_dict={x: cr_data, is_training: False})
+        kl_oos2 = sess.run([kl_all], feed_dict={x: rt_data, is_training: False})
+
+        return sess, saver, graph, pooled, logits, x, y, is_training, kl_a[0], kl_oos1[0], kl_oos2[0]
 
 
 

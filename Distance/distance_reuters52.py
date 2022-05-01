@@ -139,6 +139,10 @@ class Reuters52:
 
             acc = 100 * tf.reduce_mean(tf.to_float(tf.equal(tf.argmax(logits, 1), y)))
 
+            s = tf.nn.softmax(logits)
+            kl_all = tf.log(52. - self.nclasses_to_exclude) + tf.reduce_sum(s * tf.log(tf.abs(s) + 1e-10),
+                                                                           reduction_indices=[1], keep_dims=True)
+
         # initialize
         sess = tf.InteractiveSession(graph=graph)
         tf.initialize_all_variables().run()
@@ -161,6 +165,9 @@ class Reuters52:
                 _, l, batch_acc = sess.run([optimizer, loss, acc],
                                            feed_dict={x: x_batch, y: y_batch, is_training: True})
 
-            return sess, saver, graph, h, x, y, is_training,logits
+        kl_a = sess.run([kl_all], feed_dict={x: in_sample_examples, y: in_sample_labels, is_training: False})
+        kl_oos = sess.run([kl_all], feed_dict={x: oos_examples, is_training: False})
+
+        return sess, saver, graph, h, logits, x, y, is_training, kl_a[0], kl_oos[0]
 
 

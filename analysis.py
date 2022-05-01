@@ -10,6 +10,26 @@ from pprint import pprint
 import constants 
 from scipy.special import logsumexp
 
+
+def calculate_all2(test_distances, ood_set_distances, reverse=False):
+    if reverse:
+        test_distances = -1 * np.array(test_distances)
+        ood_set_distances = -1*np.array(ood_set_distances)
+    y_true = []
+    for i in range(len(test_distances)):
+        y_true.append(0)
+    for i in range(len(ood_set_distances)):
+        y_true.append(1)
+
+    RESULTS = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances),
+               "AUPR_out": calculate_AUPR_out(y_true, test_distances, ood_set_distances),
+               "AUPR_in": calculate_AUPR_in(y_true, test_distances, ood_set_distances),
+               "AUROC": calculate_AUROC(y_true, test_distances, ood_set_distances)}
+
+    """## **Overall results**"""
+    pprint(RESULTS)
+
+
 def calculate_all(NUM_CLASSES):
     """## ** Check output folders**"""
     Utils.check_all_paths()
