@@ -8,11 +8,16 @@ def printD(x):
         print(x)
 
 
+def printE(x):
+    if DEBUG_ERROR:
+        print(x)
+
+
 def check_path(path):
     if not os.path.exists(path):
-        print(f"Err: {path} doesn't exist!")
+        printE(f"Err: {path} doesn't exist!")
     else:
-        print(f"{path} exists!")
+        printD(f"{path} exists!")
 
 
 def get_vocab(dataset):
