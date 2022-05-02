@@ -13,24 +13,19 @@ import sklearn.metrics as sk
 
 
 def main():
-    # Utils.init_folders()
-
     # constants.set_data_names("Reuters6", "Reuters2")
-    # Utils.init_folders()
     # reuters8 = Reuters8()
     # in_sample_examples, in_sample_labels, dev_in_sample_examples, \
     # dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = reuters8.get_data()
     # sess, saver, graph, fel, logits, x, y, is_training, safe, risky = reuters8.train_model()
 
     # constants.set_data_names("Reuters40", "Reuters12")
-    # Utils.init_folders()
     # reuters8 = Reuters52()
     # in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
     # dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = reuters8.get_data()
     # sess, saver, graph, fel, logits, x, y, is_training, safe, risky = reuters8.train_model()
 
     # constants.set_data_names("15Newsgroup", "5Newsgroup")
-    # Utils.init_folders()
     # print(constants.DATA_NAME, constants.OOD_DATA_NAME)
     # reuters8 = Newsgroup20()
     # in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
@@ -46,10 +41,10 @@ def main():
 
     total_in_sample_classes = len(list(set(in_sample_labels)))
     total_out_sample_classes = len(list(set(oos_labels)))
-    print(f"Total in-sample test examples = { len(list(test_in_sample_labels)) }")
-    print(f"Total out-sample test examples = { len(list(oos_examples)) }")
-    print(f"Total in-sample classes = { total_in_sample_classes }")
-    print(f"Total out-sample classes = { total_out_sample_classes }")
+    print(f"Total in-sample test examples = {len(list(test_in_sample_labels))}")
+    print(f"Total out-sample test examples = {len(list(oos_examples))}")
+    print(f"Total in-sample classes = {total_in_sample_classes}")
+    print(f"Total out-sample classes = {total_out_sample_classes}")
 
     classes, NUM_CLASSES = Utils.get_class_info(in_sample_labels)
 

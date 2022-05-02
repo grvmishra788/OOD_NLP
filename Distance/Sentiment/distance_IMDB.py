@@ -152,13 +152,13 @@ class IMDB:
                             acc, feed_dict={x: X_dev, y: Y_dev})
                         if best_acc < curr_dev_acc:
                             best_acc = curr_dev_acc
-                            saver.save(sess, './Baseline/Categorization/data/best_imdb_model.ckpt')
+                            saver.save(sess, './Baseline/Sentiment/data/best_imdb_model.ckpt')
 
                 print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
                       (epoch + 1, l, batch_acc, curr_dev_acc))
 
         # restore variables from disk
-        saver.restore(sess, "./Baseline/Categorization/data/best_imdb_model.ckpt")
+        saver.restore(sess, "./Baseline/Sentiment/data/best_imdb_model.ckpt")
         print("Best model restored!")
 
         print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev}))
