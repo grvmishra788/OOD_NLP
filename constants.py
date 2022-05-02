@@ -2,8 +2,10 @@ import os
 
 
 ENERGY_TEMP = 5
-SOFTMAX_TEMP=2.5
-DEBUG = True
+SOFTMAX_TEMP = 2.5
+
+RE_TRAIN = False
+DEBUG = False
 SAVE = True
 
 # init names

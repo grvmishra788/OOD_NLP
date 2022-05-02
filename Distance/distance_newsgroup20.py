@@ -3,6 +3,7 @@ import numpy as np
 import re
 
 import Utils
+import constants
 from Utils import printD
 
 
@@ -152,31 +153,33 @@ class Newsgroup20:
         # create saver to train model
         saver = tf.train.Saver(max_to_keep=1)
 
-        best_acc = 0
+        if constants.RE_TRAIN:
 
-        for epoch in range(self.num_epochs):
-            # shuffle data every epoch
-            indices = np.arange(num_examples)
-            np.random.shuffle(indices)
-            in_sample_examples = in_sample_examples[indices]
-            in_sample_labels = in_sample_labels[indices]
+            best_acc = 0
 
-            for i in range(num_batches):
-                offset = i * self.batch_size
+            for epoch in range(self.num_epochs):
+                # shuffle data every epoch
+                indices = np.arange(num_examples)
+                np.random.shuffle(indices)
+                in_sample_examples = in_sample_examples[indices]
+                in_sample_labels = in_sample_labels[indices]
 
-                x_batch = in_sample_examples[offset:offset + self.batch_size]
-                y_batch = in_sample_labels[offset:offset + self.batch_size]
+                for i in range(num_batches):
+                    offset = i * self.batch_size
 
-                _, l, batch_acc = sess.run([optimizer, loss, acc], feed_dict={x: x_batch, y: y_batch})
+                    x_batch = in_sample_examples[offset:offset + self.batch_size]
+                    y_batch = in_sample_labels[offset:offset + self.batch_size]
 
-            curr_dev_acc = sess.run(
-                acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels})
-            if best_acc < curr_dev_acc:
-                best_acc = curr_dev_acc
-                saver.save(sess, './Baseline/Categorization/data/best_newsgroup_model.ckpt')
+                    _, l, batch_acc = sess.run([optimizer, loss, acc], feed_dict={x: x_batch, y: y_batch})
 
-            print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
-                  (epoch + 1, l, batch_acc, curr_dev_acc))
+                curr_dev_acc = sess.run(
+                    acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels})
+                if best_acc < curr_dev_acc:
+                    best_acc = curr_dev_acc
+                    saver.save(sess, './Baseline/Categorization/data/best_newsgroup_model.ckpt')
+
+                print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
+                      (epoch + 1, l, batch_acc, curr_dev_acc))
 
         # restore variables from disk
         saver.restore(sess, "./Baseline/Categorization/data/best_newsgroup_model.ckpt")

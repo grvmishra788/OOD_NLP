@@ -4,6 +4,7 @@ import re
 import collections
 
 import Utils
+import constants
 from Utils import printD
 
 
@@ -85,23 +86,37 @@ class Reuters52:
         X_test = X_test[indices]
         Y_test = Y_test[indices]
 
+        # split into train/dev
+        X_dev = X_train[-500:]
+        Y_dev = Y_train[-500:]
+        X_train = X_train[:-500]
+        Y_train = Y_train[:-500]
+
         in_sample_examples, in_sample_labels, oos_examples, oos_labels = \
             Utils.partition_data_in_two(X_train, Y_train, self.to_include, self.to_exclude)
-        test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = \
+        dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels = \
+            Utils.partition_data_in_two(X_dev, Y_dev, self.to_include, self.to_exclude)
+        test_in_sample_examples, test_in_sample_labels, test_oos_examples, test_oos_labels = \
             Utils.partition_data_in_two(X_test, Y_test, self.to_include, self.to_exclude)
 
         # safely assumes there is an example for each in_sample class in both the training and dev class
         in_sample_labels = Utils.relabel_in_sample_labels(in_sample_labels)
+        dev_in_sample_labels = Utils.relabel_in_sample_labels(dev_in_sample_labels)
         test_in_sample_labels = Utils.relabel_in_sample_labels(test_in_sample_labels)
 
+        # use all ood examples
+        oos_examples = np.concatenate((oos_examples, dev_oos_examples, test_oos_examples), axis=0)
+        oos_labels = np.concatenate((oos_labels, dev_oos_labels, test_oos_labels), axis=0)
+
         printD('Reuters52 Data loaded')
-        return in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-               dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels
+
+        return in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+               dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels
 
     def train_model(self):
 
-        in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-        dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = self.get_data()
+        in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+        dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = self.get_data()
 
         num_examples = in_sample_labels.shape[0]
         num_batches = num_examples // self.batch_size
@@ -149,21 +164,39 @@ class Reuters52:
         # create saver to train model
         saver = tf.train.Saver(max_to_keep=1)
 
-        for epoch in range(self.num_epochs):
-            # shuffle data every epoch
-            indices = np.arange(num_examples)
-            np.random.shuffle(indices)
-            in_sample_examples = in_sample_examples[indices]
-            in_sample_labels = in_sample_labels[indices]
+        if constants.RE_TRAIN:
+            best_acc = 0
+            for epoch in range(self.num_epochs):
+                # shuffle data every epoch
+                indices = np.arange(num_examples)
+                np.random.shuffle(indices)
+                in_sample_examples = in_sample_examples[indices]
+                in_sample_labels = in_sample_labels[indices]
 
-            for i in range(num_batches):
-                offset = i * self.batch_size
+                for i in range(num_batches):
+                    offset = i * self.batch_size
 
-                x_batch = in_sample_examples[offset:offset + self.batch_size]
-                y_batch = in_sample_labels[offset:offset + self.batch_size]
+                    x_batch = in_sample_examples[offset:offset + self.batch_size]
+                    y_batch = in_sample_labels[offset:offset + self.batch_size]
 
-                _, l, batch_acc = sess.run([optimizer, loss, acc],
-                                           feed_dict={x: x_batch, y: y_batch, is_training: True})
+                    _, l, batch_acc = sess.run([optimizer, loss, acc],
+                                               feed_dict={x: x_batch, y: y_batch, is_training: True})
+
+                curr_dev_acc = sess.run(
+                    acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False})
+                if best_acc < curr_dev_acc:
+                    best_acc = curr_dev_acc
+                    saver.save(sess, "Baseline/Categorization/data/best_r52_model.ckpt")
+
+                print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
+                      (epoch + 1, l, batch_acc, curr_dev_acc))
+
+        # restore variables from disk
+        saver.restore(sess, "Baseline/Categorization/data/best_r52_model.ckpt")
+        print("Best model restored!")
+
+        print('Dev accuracy:',
+              sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
 
         kl_a = sess.run([kl_all], feed_dict={x: in_sample_examples, y: in_sample_labels, is_training: False})
         kl_oos = sess.run([kl_all], feed_dict={x: oos_examples, is_training: False})
