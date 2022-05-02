@@ -54,7 +54,7 @@ def calculate_all(NUM_CLASSES):
 
     test_logits,ood_logits=load_arrays.load_test_logits(),load_arrays.load_ood_logits()
     test_energy_score,ood_energy_score=calculate_energy_score(test_logits),calculate_energy_score(ood_logits)
-
+    test_soft_score,ood_soft_score=softmax_temp_score(test_logits),softmax_temp_score(ood_logits)
     y_pred = []
     y_true = []
     for i in range(len(test_distances)):
@@ -70,13 +70,31 @@ def calculate_all(NUM_CLASSES):
             y_pred.append(1)
         else:
             y_pred.append(0)
+    print("-----------------------------------------------------------------------------------")        
+    print("Results of energy based OOD")        
+    RESULTS = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_energy_score, ood_energy_score),
+            #    "Detection Accuracy": calculate_detection_accuracy(y_true, y_pred),
+               "AUPR_out": calculate_AUPR_out(y_true, test_energy_score, ood_energy_score),
+               "AUPR_in": calculate_AUPR_in(y_true, test_energy_score, ood_energy_score),
+               "AUROC": calculate_AUROC(y_true, test_energy_score, ood_energy_score)}            
+    pprint(RESULTS)
 
+    print("-----------------------------------------------------------------------------------") 
+    print("Results of temperature scaling based OOD") 
+    RESULTS = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_soft_score, ood_soft_score),
+            #    "Detection Accuracy": calculate_detection_accuracy(y_true, y_pred),
+               "AUPR_out": calculate_AUPR_out(y_true, test_soft_score, ood_soft_score),
+               "AUPR_in": calculate_AUPR_in(y_true, test_soft_score, ood_soft_score),
+               "AUROC": calculate_AUROC(y_true, test_soft_score, ood_soft_score)}
+    pprint(RESULTS)
+
+    print("-----------------------------------------------------------------------------------") 
+    print("Results of Distance based OOD") 
     RESULTS = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances),
                "Detection Accuracy": calculate_detection_accuracy(y_true, y_pred),
                "AUPR_out": calculate_AUPR_out(y_true, test_distances, ood_set_distances),
                "AUPR_in": calculate_AUPR_in(y_true, test_distances, ood_set_distances),
                "AUROC": calculate_AUROC(y_true, test_distances, ood_set_distances)}
-
     """## **Overall results**"""
     pprint(RESULTS)
 
@@ -206,5 +224,13 @@ def calculate_AUROC(y_true, test_distances, ood_set_distances):
 def calculate_energy_score(logits):
     energy_score=[]
     for l in logits:
-        energy_score.append(TEMP*logsumexp(l / TEMP))
+        energy_score.append(-1*ENERGY_TEMP*logsumexp(l / ENERGY_TEMP))
     return energy_score
+
+def softmax_temp_score(logits):
+    softmax_temp=[]
+    for l in logits:
+        e_x = np.exp(l / SOFTMAX_TEMP)
+        soft=e_x / e_x.sum()
+        softmax_temp.append(-np.max(soft))
+    return softmax_temp        

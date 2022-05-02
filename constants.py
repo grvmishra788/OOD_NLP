@@ -1,7 +1,8 @@
 import os
 
 
-TEMP = 100
+ENERGY_TEMP = 5
+SOFTMAX_TEMP=2.5
 DEBUG = True
 SAVE = True
 
