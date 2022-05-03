@@ -22,7 +22,8 @@ def calculate_all2(test_distances, ood_set_distances, reverse=False):
     for i in range(len(ood_set_distances)):
         y_true.append(1)
 
-    RESULTS = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances),
+    RESULTS = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances, "Baseline"),
+               "Detection Accuracy": calculate_detection_accuracy(y_true, test_distances, ood_set_distances),
                "AUPR_out": calculate_AUPR_out(y_true, test_distances, ood_set_distances),
                "AUPR_in": calculate_AUPR_in(y_true, test_distances, ood_set_distances),
                "AUROC": calculate_AUROC(y_true, test_distances, ood_set_distances)}
@@ -42,29 +43,22 @@ def calculate_all():
     ood_set_distances, ood_set_closest_classes = load_arrays.load_OOD_dists_and_closest_classes()
 
     test_logits, ood_logits = load_arrays.load_test_logits(), load_arrays.load_ood_logits()
-    test_energy_score, ood_energy_score = calculate_energy_score(test_logits), calculate_energy_score(ood_logits)
+    test_energy_score, ood_energy_score = calculate_prob_energy_score(test_logits), calculate_prob_energy_score(
+        ood_logits)
     test_soft_score, ood_soft_score = softmax_temp_score(test_logits), softmax_temp_score(ood_logits)
 
-    y_pred = []
+    test_ensemble_score, ood_ensemble_score = ensemble(test_distances, ood_set_distances, test_energy_score,
+                                                       ood_energy_score, test_soft_score, ood_soft_score)
     y_true = []
     for i in range(len(test_distances)):
         y_true.append(0)
-        if test_distances[i] > class_radii[test_closest_classes[i]]:
-            y_pred.append(1)
-        else:
-            y_pred.append(0)
-
     for i in range(len(ood_set_distances)):
         y_true.append(1)
-        if ood_set_distances[i] > class_radii[ood_set_closest_classes[i]]:
-            y_pred.append(1)
-        else:
-            y_pred.append(0)
 
     printD("-----------------------------------------------------------------------------------")
     printD("Results of energy based OOD")
-    RESULTS_ENERGY = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_energy_score, ood_energy_score),
-                      #    "Detection Accuracy": calculate_detection_accuracy(y_true, y_pred),
+    RESULTS_ENERGY = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_energy_score, ood_energy_score, "Energy"),
+                      "Detection Accuracy": calculate_detection_accuracy(y_true, test_energy_score, ood_energy_score),
                       "AUPR_out": calculate_AUPR_out(y_true, test_energy_score, ood_energy_score),
                       "AUPR_in": calculate_AUPR_in(y_true, test_energy_score, ood_energy_score),
                       "AUROC": calculate_AUROC(y_true, test_energy_score, ood_energy_score)}
@@ -72,8 +66,8 @@ def calculate_all():
 
     printD("-----------------------------------------------------------------------------------")
     printD("Results of temperature scaling based OOD")
-    RESULTS_TEMP = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_soft_score, ood_soft_score),
-                    #    "Detection Accuracy": calculate_detection_accuracy(y_true, y_pred),
+    RESULTS_TEMP = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_soft_score, ood_soft_score, "Temperature Scaling"),
+                    "Detection Accuracy": calculate_detection_accuracy(y_true, test_soft_score, ood_soft_score),
                     "AUPR_out": calculate_AUPR_out(y_true, test_soft_score, ood_soft_score),
                     "AUPR_in": calculate_AUPR_in(y_true, test_soft_score, ood_soft_score),
                     "AUROC": calculate_AUROC(y_true, test_soft_score, ood_soft_score)}
@@ -81,17 +75,27 @@ def calculate_all():
 
     printD("-----------------------------------------------------------------------------------")
     printD("Results of Distance based OOD")
-    RESULTS_DIST = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances),
-                    # "Detection Accuracy": calculate_detection_accuracy(y_true, y_pred),
+    RESULTS_DIST = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances, "Cosine distance"),
+                    "Detection Accuracy": calculate_detection_accuracy(y_true, test_distances, ood_set_distances),
                     "AUPR_out": calculate_AUPR_out(y_true, test_distances, ood_set_distances),
                     "AUPR_in": calculate_AUPR_in(y_true, test_distances, ood_set_distances),
                     "AUROC": calculate_AUROC(y_true, test_distances, ood_set_distances)}
+
+    printD("-----------------------------------------------------------------------------------")
+    printD("Results of Ensemble based OOD")
+    RESULTS_ENSEMBLE = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_ensemble_score, ood_ensemble_score, "Ensemble"),
+                        "Detection Accuracy": calculate_detection_accuracy(y_true, test_ensemble_score,
+                                                                           ood_ensemble_score),
+                        "AUPR_out": calculate_AUPR_out(y_true, test_ensemble_score, ood_ensemble_score),
+                        "AUPR_in": calculate_AUPR_in(y_true, test_ensemble_score, ood_ensemble_score),
+                        "AUROC": calculate_AUROC(y_true, test_ensemble_score, ood_ensemble_score)}
+
     """## **Overall results**"""
     # pprint(RESULTS_DIST)
-    return RESULTS_TEMP, RESULTS_ENERGY, RESULTS_DIST
+    return RESULTS_TEMP, RESULTS_ENERGY, RESULTS_DIST, RESULTS_ENSEMBLE
 
 
-def calculate_TNR_at_95_TPR(test_distances, ood_set_distances):
+def calculate_TNR_at_95_TPR(test_distances, ood_set_distances, method=""):
     """## **Calculate TNR at 95% TPR**"""
 
     # sort scores
@@ -109,6 +113,7 @@ def calculate_TNR_at_95_TPR(test_distances, ood_set_distances):
     printD("TNR at 95% TPR - {0}%".format(res))
 
     if constants.PLOT_FIG:
+        # if True and method == "Ensemble":
         plt.plot(test_dists_sorted)
         plt.plot(ood_set_dists_sorted)
 
@@ -126,7 +131,7 @@ def calculate_TNR_at_95_TPR(test_distances, ood_set_distances):
 
         plt.title("Sorted scores of in- and out- distribution test samples")
         plt.xlabel("Sample No.")
-        plt.ylabel("Scores with cosine distance")
+        plt.ylabel(f"{method} scores")
         plt.legend([constants.DATA_NAME, constants.OOD_DATA_NAME, "Calculating TNR at 95% TPR"])
         plt.savefig("TNR_at_95%_TPR.png")
         plt.show()
@@ -135,9 +140,26 @@ def calculate_TNR_at_95_TPR(test_distances, ood_set_distances):
     return round(100 * res, 2)
 
 
-def calculate_detection_accuracy(y_true, y_pred):
+def calculate_detection_accuracy(y_true, test_distances, ood_set_distances):
     """## **Calculate Detection Accuracy**"""
-    res = round(metrics.accuracy_score(y_true, y_pred),2)
+    # sort scores to get threshold
+    test_dists_sorted = sorted(test_distances)
+    threshold = test_dists_sorted[int(0.95 * len(test_dists_sorted))]
+
+    y_pred = []
+    for i in range(len(test_distances)):
+        if test_distances[i] > threshold:
+            y_pred.append(1)
+        else:
+            y_pred.append(0)
+
+    for i in range(len(ood_set_distances)):
+        if ood_set_distances[i] > threshold:
+            y_pred.append(1)
+        else:
+            y_pred.append(0)
+
+    res = round(100 * metrics.accuracy_score(y_true, y_pred), 2)
     return res
 
 
@@ -164,10 +186,8 @@ def calculate_AUPR_out(y_true, test_distances, ood_set_distances):
 
 def calculate_AUPR_in(y_true, test_distances, ood_set_distances):
     """## **Calculate AUPR_{in} score**"""
-    precision, recall, thresholds = metrics.precision_recall_curve(y_true,
-                                                                   1 - np.concatenate(
-                                                                       (test_distances, ood_set_distances)),
-                                                                   pos_label=0)
+    precision, recall, thresholds = metrics.precision_recall_curve(y_true, - np.concatenate(
+        (test_distances, ood_set_distances)), pos_label=0)
     if constants.PLOT_FIG:
         # plot model roc curve
         pyplot.plot(recall, precision)
@@ -181,7 +201,7 @@ def calculate_AUPR_in(y_true, test_distances, ood_set_distances):
         plt.savefig("PR_Curve_in.png")
         pyplot.show()
 
-    return round(100 * metrics.auc(recall, precision),2)
+    return round(100 * metrics.auc(recall, precision), 2)
 
 
 def calculate_AUROC(y_true, test_distances, ood_set_distances):
@@ -218,10 +238,26 @@ def calculate_energy_score(logits):
     return energy_score
 
 
+def calculate_prob_energy_score(logits):
+    energy_score = []
+    for l in logits:
+        Ex = -constants.ENERGY_TEMP * logsumexp(l / constants.ENERGY_TEMP)
+        energy_score.append(Ex)
+    return np.array(energy_score)
+
+
 def softmax_temp_score(logits):
     softmax_temp = []
     for l in logits:
-        e_x = np.exp( l / constants.SOFTMAX_TEMP)
+        e_x = np.exp(l / constants.SOFTMAX_TEMP)
         soft = e_x / e_x.sum()
-        softmax_temp.append(-np.max(soft))
-    return softmax_temp
+        softmax_temp.append(1 - np.max(soft))
+    return np.array(softmax_temp)
+
+
+def ensemble(test_distances, ood_set_distances, test_energy_score, ood_energy_score, test_soft_score, ood_soft_score):
+    # return np.log(test_distances) + np.log(np.array(test_soft_score)), \
+    #        np.log(ood_set_distances) + np.log(np.array(ood_soft_score))
+
+    return 2 * np.log(test_distances) + np.log(test_soft_score) - np.log(-test_energy_score), \
+           2 * np.log(ood_set_distances) + np.log(ood_soft_score) - np.log(-ood_energy_score)

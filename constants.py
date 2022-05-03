@@ -3,7 +3,7 @@ import os
 import Utils
 
 ENERGY_TEMP = 5
-SOFTMAX_TEMP = 2.5
+SOFTMAX_TEMP = 10
 
 DATASETS = ["Reuters8", "Reuters52", "20NG", "IMDB_CR", "IMDB_MR"]
 
