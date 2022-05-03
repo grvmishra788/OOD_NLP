@@ -4,7 +4,6 @@ import matplotlib.pylab as plt
 from matplotlib import pyplot
 from sklearn import metrics
 from sklearn.metrics import roc_curve, auc
-from constants import *
 from Distance import load_arrays
 import Utils
 from Utils import printD
@@ -128,7 +127,7 @@ def calculate_TNR_at_95_TPR(test_distances, ood_set_distances):
         plt.title("Sorted scores of in- and out- distribution test samples")
         plt.xlabel("Sample No.")
         plt.ylabel("Scores with cosine distance")
-        plt.legend([DATA_NAME, OOD_DATA_NAME, "Calculating TNR at 95% TPR"])
+        plt.legend([constants.DATA_NAME, constants.OOD_DATA_NAME, "Calculating TNR at 95% TPR"])
         plt.savefig("TNR_at_95%_TPR.png")
         plt.show()
         plt.draw()
@@ -215,14 +214,14 @@ def calculate_AUROC(y_true, test_distances, ood_set_distances):
 def calculate_energy_score(logits):
     energy_score = []
     for l in logits:
-        energy_score.append(-1 * ENERGY_TEMP * logsumexp(l / ENERGY_TEMP))
+        energy_score.append(-1 * constants.ENERGY_TEMP * logsumexp(l / constants.ENERGY_TEMP))
     return energy_score
 
 
 def softmax_temp_score(logits):
     softmax_temp = []
     for l in logits:
-        e_x = np.exp(l / SOFTMAX_TEMP)
+        e_x = np.exp( l / constants.SOFTMAX_TEMP)
         soft = e_x / e_x.sum()
         softmax_temp.append(-np.max(soft))
     return softmax_temp

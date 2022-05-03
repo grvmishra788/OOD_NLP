@@ -55,7 +55,11 @@ class Newsgroup20:
                 line = re.sub(r'\W+', ' ', line).strip()
                 x.append(line[1:])
                 x[-1] = ' '.join(word for word in x[-1].split() if word not in stop_words)
-                y.append(line[0])
+                if line[:2].isnumeric():
+                    y.append(line[:2])
+                else:
+                    y.append(line[0])
+
         return x, np.array(y, dtype=int)
 
     def get_data(self):
@@ -90,7 +94,7 @@ class Newsgroup20:
             Utils.partition_data_in_two(X_train, Y_train, self.to_include, self.to_exclude)
         dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, dev_oos_labels = \
             Utils.partition_data_in_two(X_dev, Y_dev, self.to_include, self.to_exclude)
-        test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = \
+        test_in_sample_examples, test_in_sample_labels, test_oos_examples, test_oos_labels = \
             Utils.partition_data_in_two(X_test, Y_test, self.to_include, self.to_exclude)
 
         # safely assumes there is an example for each in_sample class in both the training and dev class
@@ -98,17 +102,19 @@ class Newsgroup20:
         dev_in_sample_labels = Utils.relabel_in_sample_labels(dev_in_sample_labels)
         test_in_sample_labels = Utils.relabel_in_sample_labels(test_in_sample_labels)
 
+        # use all ood examples
+        oos_examples = np.concatenate((oos_examples, dev_oos_examples, test_oos_examples), axis=0)
+        oos_labels = np.concatenate((oos_labels, dev_oos_labels, test_oos_labels), axis=0)
+
         printD('20NG Data loaded')
 
-        return in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-               dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, \
-               dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels
+        return in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+               dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels
 
     def train_model(self):
 
-        in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-        dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, \
-        dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = self.get_data()
+        in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+        dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = self.get_data()
 
         num_examples = in_sample_labels.shape[0]
         num_batches = num_examples // self.batch_size

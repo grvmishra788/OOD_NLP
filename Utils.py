@@ -1,15 +1,16 @@
 import numpy as np
 import collections
-from constants import *
+import constants
+import os
 
 
 def printD(x):
-    if DEBUG:
+    if constants.DEBUG:
         print(x)
 
 
 def printE(x):
-    if DEBUG_ERROR:
+    if constants.DEBUG_ERROR:
         print(x)
 
 
@@ -129,50 +130,50 @@ def relabel_in_sample_labels(labels):
 
 
 def init_folders():
-    if not os.path.exists(OUTPUT_FOLDER_NAME):
-        os.makedirs(OUTPUT_FOLDER_NAME)
+    if not os.path.exists(constants.OUTPUT_FOLDER_NAME):
+        os.makedirs(constants.OUTPUT_FOLDER_NAME)
 
-    if not os.path.exists(FEATURES_DATA_FOLDER):
-        os.makedirs(FEATURES_DATA_FOLDER)
+    if not os.path.exists(constants.FEATURES_DATA_FOLDER):
+        os.makedirs(constants.FEATURES_DATA_FOLDER)
 
-    if not os.path.exists(OOD_FEATURES_DATA_FOLDER):
-        os.makedirs(OOD_FEATURES_DATA_FOLDER)
+    if not os.path.exists(constants.OOD_FEATURES_DATA_FOLDER):
+        os.makedirs(constants.OOD_FEATURES_DATA_FOLDER)
 
-    if not os.path.exists(DISTS_DATA_FOLDER):
-        os.makedirs(DISTS_DATA_FOLDER)
+    if not os.path.exists(constants.DISTS_DATA_FOLDER):
+        os.makedirs(constants.DISTS_DATA_FOLDER)
 
-    if not os.path.exists(OOD_DISTS_DATA_FOLDER):
-        os.makedirs(OOD_DISTS_DATA_FOLDER)
+    if not os.path.exists(constants.OOD_DISTS_DATA_FOLDER):
+        os.makedirs(constants.OOD_DISTS_DATA_FOLDER)
 
-    if not os.path.exists(CLOSEST_CLASS_DATA_FOLDER):
-        os.makedirs(CLOSEST_CLASS_DATA_FOLDER)
+    if not os.path.exists(constants.CLOSEST_CLASS_DATA_FOLDER):
+        os.makedirs(constants.CLOSEST_CLASS_DATA_FOLDER)
 
-    if not os.path.exists(OOD_CLOSEST_CLASS_DATA_FOLDER):
-        os.makedirs(OOD_CLOSEST_CLASS_DATA_FOLDER)
+    if not os.path.exists(constants.OOD_CLOSEST_CLASS_DATA_FOLDER):
+        os.makedirs(constants.OOD_CLOSEST_CLASS_DATA_FOLDER)
 
-    if not os.path.exists(LABELS_DATA_FOLDER):
-        os.makedirs(LABELS_DATA_FOLDER)
+    if not os.path.exists(constants.LABELS_DATA_FOLDER):
+        os.makedirs(constants.LABELS_DATA_FOLDER)
 
-    if not os.path.exists(MEANS_DATA_FOLDER):
-        os.makedirs(MEANS_DATA_FOLDER)
+    if not os.path.exists(constants.MEANS_DATA_FOLDER):
+        os.makedirs(constants.MEANS_DATA_FOLDER)
 
-    if not os.path.exists(RADIUS_DATA_FOLDER):
-        os.makedirs(RADIUS_DATA_FOLDER)
+    if not os.path.exists(constants.RADIUS_DATA_FOLDER):
+        os.makedirs(constants.RADIUS_DATA_FOLDER)
 
-    printD(f"Initialized folders at {OUTPUT_FOLDER_NAME}")
+    printD(f"Initialized folders at {constants.OUTPUT_FOLDER_NAME}")
 
 
 def check_all_paths():
-    check_path(OUTPUT_FOLDER_NAME)
-    check_path(FEATURES_DATA_FOLDER)
-    check_path(OOD_FEATURES_DATA_FOLDER)
-    check_path(DISTS_DATA_FOLDER)
-    check_path(OOD_DISTS_DATA_FOLDER)
-    check_path(CLOSEST_CLASS_DATA_FOLDER)
-    check_path(OOD_CLOSEST_CLASS_DATA_FOLDER)
-    check_path(LABELS_DATA_FOLDER)
-    check_path(MEANS_DATA_FOLDER)
-    check_path(RADIUS_DATA_FOLDER)
+    check_path(constants.OUTPUT_FOLDER_NAME)
+    check_path(constants.FEATURES_DATA_FOLDER)
+    check_path(constants.OOD_FEATURES_DATA_FOLDER)
+    check_path(constants.DISTS_DATA_FOLDER)
+    check_path(constants.OOD_DISTS_DATA_FOLDER)
+    check_path(constants.CLOSEST_CLASS_DATA_FOLDER)
+    check_path(constants.OOD_CLOSEST_CLASS_DATA_FOLDER)
+    check_path(constants.LABELS_DATA_FOLDER)
+    check_path(constants.MEANS_DATA_FOLDER)
+    check_path(constants.RADIUS_DATA_FOLDER)
 
 
 def get_class_info(in_sample_labels):

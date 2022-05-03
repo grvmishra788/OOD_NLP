@@ -32,9 +32,8 @@ def main():
         elif data == "20NG":
             constants.set_data_names("15Newsgroup", "5Newsgroup")
             reuters8 = Newsgroup20()
-            in_sample_examples, in_sample_labels, oos_examples, oos_labels, \
-            dev_in_sample_examples, dev_in_sample_labels, dev_oos_examples, \
-            dev_oos_labels, test_in_sample_examples, test_in_sample_labels, test_oos_examples, dev_oos_labels = reuters8.get_data()
+            in_sample_examples, in_sample_labels, dev_in_sample_examples, \
+            dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = reuters8.get_data()
             sess, saver, graph, fel, logits, x, y, is_training, safe, risky = reuters8.train_model()
         elif data == "IMDB_CR":
             constants.set_data_names("IMDB", "CR")
@@ -44,7 +43,7 @@ def main():
         else:
             constants.set_data_names("IMDB", "MR")
             reuters8 = IMDB()
-            X_dev, Y_dev, in_sample_examples, in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels, oos_examples1, oos_labels1 = reuters8.get_data()
+            X_dev, Y_dev, in_sample_examples, in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples1, oos_labels1, oos_examples, oos_labels = reuters8.get_data()
             sess, saver, graph, fel, logits, x, y, is_training, safe, risky1, risky = reuters8.train_model()
 
         print("---------------In- and out- domain Class Statistics------------------")
