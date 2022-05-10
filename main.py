@@ -27,9 +27,9 @@ def main():
     parser.add_argument('--retrain', default=False,
                         help='retrain')
     parser.add_argument('--debug', default=False,
-                        help='retrain')
-    parser.add_argument('--output_folder', default="outputs",
                         help='debug')
+    parser.add_argument('--output_folder', default="outputs",
+                        help='output_folder')
 
     args = parser.parse_args()
     constants.set_energy_temp(args.energy_temp)
