@@ -1,14 +1,21 @@
 # OOD_NLP
 For running the code please follow the steps as mentioned below:
 1. Create the venv module:
+```
 python3 -m venv /path/to/new/virtual/environment 
+```
 2. Activate the environment:
+```
 source /path/to/new/virtual/environment/bin/activate
+```
 3. we need to install all the dependency:
+```
  pip3 install -r requirements.txt
+```
 4. To run the code: 
+```
 python3 main.py --energy_temp 5 --softmax_temp 10 --retrain False --debug False --output_folder "outputs"
-
+```
 Repo  to maintain code for CS769 course project (UW-Madison, Spring 2022)
 
 We plan to implement a robust framework using distance-based methods to detect Out-of-distribution samples and combine/modify existing systems to increase their effectiveness. Specifically, we hypothesize that distance-based methods could be beneficial to identifying Out-of-distribution samples, and incorporating other techniques (like temperature scaling, softmax statistics analysis, etc.) in the framework would further improve the framework’s usefulness.
