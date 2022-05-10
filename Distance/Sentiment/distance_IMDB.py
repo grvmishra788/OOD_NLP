@@ -104,12 +104,13 @@ class IMDB:
             is_training = tf.placeholder(tf.bool)
 
             # add one to vocab size for the padding symbol
+            tf.random.set_random_seed(0)
             W_embedding = tf.Variable(tf.nn.l2_normalize(
                 tf.random_normal([self.vocab_size + 1, self.embedding_dims]), 0), trainable=True)
 
             w_vecs = tf.nn.embedding_lookup(W_embedding, x)
             pooled = tf.reduce_mean(w_vecs, reduction_indices=[1])
-
+            tf.random.set_random_seed(0)
             W_out = tf.Variable(tf.nn.l2_normalize(tf.random_normal([self.embedding_dims, 2]), 0))
             b_out = tf.Variable(tf.zeros([1]))
 
@@ -135,6 +136,7 @@ class IMDB:
             for epoch in range(self.num_epochs):
                 # shuffle data every epoch
                 indices = np.arange(num_examples)
+                np.random.seed(0)
                 np.random.shuffle(indices)
                 X_train = X_train[indices]
                 Y_train = Y_train[indices]

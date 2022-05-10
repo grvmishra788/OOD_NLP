@@ -68,11 +68,13 @@ class Reuters8:
 
         # shuffle
         indices = np.arange(X_train.shape[0])
+        np.random.seed(0)
         np.random.shuffle(indices)
         X_train = X_train[indices]
         Y_train = Y_train[indices]
 
         indices = np.arange(X_test.shape[0])
+        np.random.seed(0)
         np.random.shuffle(indices)
         X_test = X_test[indices]
         Y_test = Y_test[indices]
@@ -120,7 +122,7 @@ class Reuters8:
             is_training = tf.placeholder(tf.bool)
 
             # add one to vocab size for the padding symbol
-
+            tf.random.set_random_seed(0)
             W_h = tf.Variable(tf.nn.l2_normalize(tf.random_normal([self.vocab_size, self.n_hidden]), 0) / tf.sqrt(1 + 0.45))
             b_h = tf.Variable(tf.zeros([self.n_hidden]))
 
@@ -130,7 +132,7 @@ class Reuters8:
             h = tf.cond(is_training,
                         lambda: tf.nn.dropout(gelu_fast(tf.matmul(x, W_h) + b_h), 0.5),
                         lambda: gelu_fast(tf.matmul(x, W_h) + b_h))
-
+            tf.random.set_random_seed(0)
             W_out = tf.Variable(
                 tf.nn.l2_normalize(tf.random_normal([self.n_hidden, 8 - self.nclasses_to_exclude]), 0) / tf.sqrt(0.45 + 1))
             b_out = tf.Variable(tf.zeros([8 - self.nclasses_to_exclude]))
@@ -161,6 +163,7 @@ class Reuters8:
             for epoch in range(self.num_epochs):
                 # shuffle data every epoch
                 indices = np.arange(num_examples)
+                np.random.seed(0)
                 np.random.shuffle(indices)
                 in_sample_examples = in_sample_examples[indices]
                 in_sample_labels = in_sample_labels[indices]

@@ -19,8 +19,8 @@ class Newsgroup20:
         self.num_epochs = 20
         self.hidden_dim = 128
         self.nclasses_to_exclude = 5  # 0-18
-        np.random.seed(0)
         random_classes = np.arange(20)
+        np.random.seed(0)
         np.random.shuffle(random_classes)
         self.to_include = list(random_classes[:20 - self.nclasses_to_exclude])
         self.to_exclude = list(random_classes[20 - self.nclasses_to_exclude:])
@@ -75,11 +75,13 @@ class Newsgroup20:
 
         # shuffle
         indices = np.arange(X_train.shape[0])
+        np.random.seed(0)
         np.random.shuffle(indices)
         X_train = X_train[indices]
         Y_train = Y_train[indices]
 
         indices = np.arange(X_test.shape[0])
+        np.random.seed(0)
         np.random.shuffle(indices)
         X_test = X_test[indices]
         Y_test = Y_test[indices]
@@ -127,6 +129,7 @@ class Newsgroup20:
             is_training = tf.placeholder(tf.bool)
 
             # add one to vocab size for the padding symbol
+            tf.random.set_random_seed(0)
             W_embedding = tf.Variable(
                 tf.random_uniform([self.vocab_size + 1, self.embedding_dims]) / tf.sqrt(
                     (self.vocab_size + 1 + self.embedding_dims) / 6.),
@@ -135,6 +138,7 @@ class Newsgroup20:
             w_vecs = tf.nn.embedding_lookup(W_embedding, x)
             pooled = tf.reduce_mean(w_vecs, reduction_indices=[1])
 
+            tf.random.set_random_seed(0)
             W_out = tf.Variable(
                 tf.nn.l2_normalize(tf.random_normal([self.embedding_dims, 20 - self.nclasses_to_exclude]), 0))
             b_out = tf.Variable(tf.zeros([20 - self.nclasses_to_exclude]))
@@ -166,6 +170,7 @@ class Newsgroup20:
             for epoch in range(self.num_epochs):
                 # shuffle data every epoch
                 indices = np.arange(num_examples)
+                np.random.seed(0)
                 np.random.shuffle(indices)
                 in_sample_examples = in_sample_examples[indices]
                 in_sample_labels = in_sample_labels[indices]
