@@ -7,7 +7,6 @@ from sklearn.metrics import roc_curve, auc
 from Distance import load_arrays
 import Utils
 from Utils import printD
-from pprint import pprint
 import constants
 from scipy.special import logsumexp
 
@@ -77,9 +76,9 @@ def calculate_all():
     printD("Results of Distance based OOD")
     RESULTS_DIST = {"TNR at 95% TPR": calculate_TNR_at_95_TPR(test_distances, ood_set_distances, "Cosine distance"),
                     "Detection Accuracy": calculate_detection_accuracy(y_true, test_distances, ood_set_distances),
-                    "AUPR_out": calculate_AUPR_out(y_true, test_distances, ood_set_distances),
-                    "AUPR_in": calculate_AUPR_in(y_true, test_distances, ood_set_distances),
-                    "AUROC": calculate_AUROC(y_true, test_distances, ood_set_distances)}
+                    "AUPR_out": calculate_AUPR_out(y_true, test_distances, ood_set_distances, "Cosine distance" ),
+                    "AUPR_in": calculate_AUPR_in(y_true, test_distances, ood_set_distances, "Cosine distance"),
+                    "AUROC": calculate_AUROC(y_true, test_distances, ood_set_distances, "Cosine distance")}
 
     printD("-----------------------------------------------------------------------------------")
     printD("Results of Ensemble based OOD")
@@ -112,8 +111,7 @@ def calculate_TNR_at_95_TPR(test_distances, ood_set_distances, method=""):
     res = TOTAL_OUT_OF_BOUND_SCORES / len(ood_set_dists_sorted)
     printD("TNR at 95% TPR - {0}%".format(res))
 
-    if constants.PLOT_FIG:
-        # if True and method == "Ensemble":
+    if constants.PLOT_FIG and method == "Cosine distance":
         plt.plot(test_dists_sorted)
         plt.plot(ood_set_dists_sorted)
 
@@ -133,7 +131,7 @@ def calculate_TNR_at_95_TPR(test_distances, ood_set_distances, method=""):
         plt.xlabel("Sample No.")
         plt.ylabel(f"{method} scores")
         plt.legend([constants.DATA_NAME, constants.OOD_DATA_NAME, "Calculating TNR at 95% TPR"])
-        plt.savefig("TNR_at_95%_TPR.png")
+        plt.savefig(os.path.join("outputs", "results", f"{method}_TNR_at_95%_TPR.png"))
         plt.show()
         plt.draw()
 
@@ -163,12 +161,12 @@ def calculate_detection_accuracy(y_true, test_distances, ood_set_distances):
     return res
 
 
-def calculate_AUPR_out(y_true, test_distances, ood_set_distances):
+def calculate_AUPR_out(y_true, test_distances, ood_set_distances, method=""):
     """## **Calculate AUPR_{out} score**"""
     precision, recall, thresholds = metrics.precision_recall_curve(y_true,
                                                                    np.concatenate((test_distances, ood_set_distances)),
                                                                    pos_label=1)
-    if constants.PLOT_FIG:
+    if constants.PLOT_FIG and method == "Cosine distance":
         # plot model roc curve
         pyplot.plot(recall, precision)
         plt.title("Precision-Recall curve: Out distribution -> +ve")
@@ -178,17 +176,17 @@ def calculate_AUPR_out(y_true, test_distances, ood_set_distances):
         # show the legend
         pyplot.legend()
         # show the plot
-        plt.savefig("PR_Curve_out.png")
+        plt.savefig(os.path.join("outputs", "results", f"{method}_PR_Curve_out.png"))
         pyplot.show()
 
     return round(100 * metrics.auc(recall, precision), 2)
 
 
-def calculate_AUPR_in(y_true, test_distances, ood_set_distances):
+def calculate_AUPR_in(y_true, test_distances, ood_set_distances, method=""):
     """## **Calculate AUPR_{in} score**"""
     precision, recall, thresholds = metrics.precision_recall_curve(y_true, - np.concatenate(
         (test_distances, ood_set_distances)), pos_label=0)
-    if constants.PLOT_FIG:
+    if constants.PLOT_FIG and method == "Cosine distance":
         # plot model roc curve
         pyplot.plot(recall, precision)
         plt.title("Precision-Recall curve: In distribution -> +ve")
@@ -198,18 +196,18 @@ def calculate_AUPR_in(y_true, test_distances, ood_set_distances):
         # show the legend
         pyplot.legend()
         # show the plot
-        plt.savefig("PR_Curve_in.png")
+        plt.savefig(os.path.join("outputs", "results", f"{method}_PR_Curve_in.png"))
         pyplot.show()
 
     return round(100 * metrics.auc(recall, precision), 2)
 
 
-def calculate_AUROC(y_true, test_distances, ood_set_distances):
+def calculate_AUROC(y_true, test_distances, ood_set_distances, method=""):
     """## **Calculate AUROC**"""
     # Compute ROC curve and ROC area for each class
     fpr, tpr, _ = roc_curve(y_true, np.concatenate((test_distances, ood_set_distances)))
     roc_auc = auc(fpr, tpr)
-    if constants.PLOT_FIG:
+    if constants.PLOT_FIG and method == "Cosine distance":
         plt.figure()
         lw = 2
         plt.plot(
@@ -226,7 +224,7 @@ def calculate_AUROC(y_true, test_distances, ood_set_distances):
         plt.ylabel("True Positive Rate")
         plt.title("Receiver operating characteristic")
         plt.legend(loc="lower right")
-        plt.savefig("ROC_Curve.png")
+        plt.savefig(os.path.join("outputs", "results", f"{method}_ROC_Curve.png"))
         plt.show()
     return round(100 * roc_auc, 2)
 
@@ -258,6 +256,6 @@ def softmax_temp_score(logits):
 def ensemble(test_distances, ood_set_distances, test_energy_score, ood_energy_score, test_soft_score, ood_soft_score):
     # return np.log(test_distances) + np.log(np.array(test_soft_score)), \
     #        np.log(ood_set_distances) + np.log(np.array(ood_soft_score))
-
-    return 2 * np.log(test_distances) + np.log(test_soft_score) - np.log(-test_energy_score), \
-           2 * np.log(ood_set_distances) + np.log(ood_soft_score) - np.log(-ood_energy_score)
+    max_test_energy_score = max(abs(test_energy_score))
+    return test_distances + test_soft_score + test_energy_score/max_test_energy_score, \
+           ood_set_distances + ood_soft_score + ood_energy_score/max_test_energy_score

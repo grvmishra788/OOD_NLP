@@ -242,7 +242,7 @@ def gen_radii(classes, per_class_examples):
         printD("\tCalculated but didn't save class_radii")
 
 
-def gen_all(classes, per_class_examples, in_sample_examples, in_sample_labels, test_in_sample_examples, test_oos_examples, sess, fel, x, y, is_training,logits):
+def gen_all(classes, per_class_examples, in_sample_examples, in_sample_labels, test_in_sample_examples, test_oos_examples, sess, fel, x, y, is_training, logits, noisy_test_in_sample_examples, noisy_oos_examples):
     gen_train_features(classes, in_sample_examples, in_sample_labels, sess, fel, x, is_training)
     gen_test_features(test_in_sample_examples, sess, fel, x, is_training)
     gen_ood_features(test_oos_examples, sess, fel, x,is_training)
