@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+# from torch import softmax
 import Utils
 import analysis
 import constants
@@ -14,9 +15,28 @@ from Distance.distance_newsgroup20 import Newsgroup20
 from Distance.Sentiment.distance_IMDB import IMDB
 import sklearn.metrics as sk
 from pprint import pprint
+import argparse
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Arguements for the OOD detection')
+    parser.add_argument('--energy_temp', default=5,
+                        help='Temperature value for enerrgy based OOD')
+    parser.add_argument('--softmax_temp', default=10,
+                        help='Temperature value for temperature scaling OOD')
+    parser.add_argument('--retrain', default=False,
+                        help='retrain')
+    parser.add_argument('--debug', default=False,
+                        help='retrain')                        
+    parser.add_argument('--output_folder', default="outputs",
+                        help='debug')                                                                        
+
+    args = parser.parse_args()
+    constants.set_energy_temp(args.energy_temp)
+    constants.set_energy_temp(args.softmax_temp)
+    constants.set_retrain(args.retrain)
+    constants.set_debug(args.debug)
+    constants.set_output_folder(args.output_folder)
     # with open("Results_presentation.log", "w") as log_file:
     for data in constants.DATASETS:
         results = pd.DataFrame()
@@ -83,13 +103,6 @@ def main():
         a, b, c, d = analysis.calculate_all()
         results['Baseline'] = pd.Series(analysis.calculate_all2(safe, risky, True))
         results['Temp Scaling'], results['Energy'], results['Distance'], results['Ensemble'] = pd.Series(a), pd.Series(b), pd.Series(c), pd.Series(d)
-        results.style.set_caption(f"{constants.DATA_NAME}/{constants.OOD_DATA_NAME}").set_table_styles([{
-            'selector': 'caption',
-            'props': [
-                ('color', 'blue'),
-                ('font-size', '16px')
-            ]
-        }])
         print(f"\n---------------{data}------------------")
         pprint(results)
         print("------------------------------------------\n")
