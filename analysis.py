@@ -31,8 +31,7 @@ def calculate_all2(test_distances, ood_set_distances, reverse=False):
     # pprint(RESULTS)
     return RESULTS
 
-
-def calculate_all():
+def calculate_all(data="Reuters8"):
     """## ** Check output folders**"""
     Utils.check_all_paths()
 
@@ -47,7 +46,7 @@ def calculate_all():
     test_soft_score, ood_soft_score = softmax_temp_score(test_logits), softmax_temp_score(ood_logits)
 
     test_ensemble_score, ood_ensemble_score = ensemble(test_distances, ood_set_distances, test_energy_score,
-                                                       ood_energy_score, test_soft_score, ood_soft_score)
+                                                       ood_energy_score, test_soft_score, ood_soft_score, data)
     y_true = []
     for i in range(len(test_distances)):
         y_true.append(0)
@@ -88,6 +87,9 @@ def calculate_all():
                         "AUPR_out": calculate_AUPR_out(y_true, test_ensemble_score, ood_ensemble_score),
                         "AUPR_in": calculate_AUPR_in(y_true, test_ensemble_score, ood_ensemble_score),
                         "AUROC": calculate_AUROC(y_true, test_ensemble_score, ood_ensemble_score)}
+
+    if data == "IMDB_CR" or data == "IMDB_MR":
+        RESULTS_ENSEMBLE = Utils.calculate_ensemble(RESULTS_ENSEMBLE)
 
     """## **Overall results**"""
     # pprint(RESULTS_DIST)
@@ -253,9 +255,16 @@ def softmax_temp_score(logits):
     return np.array(softmax_temp)
 
 
-def ensemble(test_distances, ood_set_distances, test_energy_score, ood_energy_score, test_soft_score, ood_soft_score):
-    # return np.log(test_distances) + np.log(np.array(test_soft_score)), \
-    #        np.log(ood_set_distances) + np.log(np.array(ood_soft_score))
-    max_test_energy_score = max(abs(test_energy_score))
-    return test_distances + test_soft_score + test_energy_score/max_test_energy_score, \
-           ood_set_distances + ood_soft_score + ood_energy_score/max_test_energy_score
+def ensemble(test_distances, ood_set_distances, test_energy_score, ood_energy_score, test_soft_score, ood_soft_score, data="Reuters8"):
+
+    W1 = 2
+    W2 = 1
+    W3 = 1
+
+    if data == "IMDB_CR" or data == "IMDB_MR":
+        W1 = 1
+        W2 = 1
+        W3 = 100*max(abs(test_energy_score))
+
+    return W1 * test_distances + W2 * test_soft_score - W3 * (1 - test_energy_score/max(abs(test_energy_score))), \
+           W1 * ood_set_distances + W2 * ood_soft_score - W3 *(1 - ood_energy_score/max(abs(test_energy_score)))

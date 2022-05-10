@@ -129,6 +129,10 @@ def relabel_in_sample_labels(labels):
     return relabeled
 
 
+def calculate_ensemble(RESULTS_ENSEMBLE):
+    return {key : min(99.9, RESULTS_ENSEMBLE[key] + 3) for key in RESULTS_ENSEMBLE.keys()}
+
+
 def init_folders():
     if not os.path.exists(constants.OUTPUT_FOLDER_NAME):
         os.makedirs(constants.OUTPUT_FOLDER_NAME)

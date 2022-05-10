@@ -27,9 +27,9 @@ def main():
     parser.add_argument('--retrain', default=False,
                         help='retrain')
     parser.add_argument('--debug', default=False,
-                        help='retrain')                        
+                        help='retrain')
     parser.add_argument('--output_folder', default="outputs",
-                        help='debug')                                                                        
+                        help='debug')
 
     args = parser.parse_args()
     constants.set_energy_temp(args.energy_temp)
@@ -100,17 +100,14 @@ def main():
         risky = np.squeeze(risky).tolist()
 
         # RESULTS_TEMP, RESULTS_ENERGY, RESULTS_DIST
-        a, b, c, d = analysis.calculate_all()
+        a, b, c, d = analysis.calculate_all(data)
         results['Baseline'] = pd.Series(analysis.calculate_all2(safe, risky, True))
         results['Temp Scaling'], results['Energy'], results['Distance'], results['Ensemble'] = pd.Series(a), pd.Series(b), pd.Series(c), pd.Series(d)
+
         print(f"\n---------------{data}------------------")
         pprint(results)
         print("------------------------------------------\n")
         results.to_csv(os.path.join("outputs", "results", f"{data}.csv"))
-
-        # pprint(f"\n---------------{data}------------------", log_file)
-        # pprint(results, log_file)
-        # pprint("------------------------------------------\n", log_file)
 
 
 if __name__ == "__main__":
