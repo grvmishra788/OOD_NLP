@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--debug', default=False,
                         help='debug')
     parser.add_argument('--output_folder', default="outputs",
-                        help='debug')
+                        help='output_folder')
 
     args = parser.parse_args()
     constants.set_energy_temp(args.energy_temp)
