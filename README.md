@@ -22,4 +22,8 @@ source /path/to/new/virtual/environment/bin/activate
 ```
 python3 main.py --energy_temp 5 --softmax_temp 10 --retrain False --debug False --output_folder "outputs"
 ```
-
+Here, energy_temp represents temperature value for energy based OOD. \
+softmax_temp represents Temperature value for temperature scaling OOD. \
+retrain represents if we want to retrain the model \
+debug represents if we want to print verbose information during training \
+output_folder represents the output path where we want to save the outputs
