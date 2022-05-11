@@ -6,14 +6,13 @@ import Utils
 import constants
 from Utils import printD
 
-class IMDB:
+class WSJ:
 
     def __init__(self):
-        self.train_file = './Baseline/Sentiment/data/imdb.train'
-        self.dev_file = './Baseline/Sentiment/data/imdb.dev'
-        self.test_file = './Baseline/Sentiment/data/test.csv'
-        self.ood_cr_file = './Baseline/Sentiment/data/CR.train'
-        self.ood_mr_file = './Baseline/Sentiment/data/MR.train'
+        self.train_file = './Baseline/POS/data/WSJ/WSJ.train'
+        self.dev_file = './Baseline/POS/data/WSJ/WSJ.dev'
+        self.test_file = './Baseline/POS/data/WSJ/test.csv'
+        self.ood_file = './Baseline/POS/data/WSJ/Twitter.train'
         self.max_example_len = 400
         self.batch_size = 32
         self.embedding_dims = 50
@@ -65,7 +64,7 @@ class IMDB:
             return x, np.array(y, dtype=int)
 
     def get_data(self):
-        printD('Loading IMDB Data')
+        printD('Loading WSJ Data')
         X_train, Y_train = self.load_data(self.train_file)
         X_dev, Y_dev = self.load_data(self.dev_file)
         X_test, Y_test = self.load_data(self.test_file)
@@ -79,20 +78,16 @@ class IMDB:
         X_dev = Utils.pad_sequences(X_dev, maxlen=self.max_example_len)
         X_test = Utils.pad_sequences(X_test, maxlen=self.max_example_len)
 
-        cr_data, cr_labels = self.load_data(self.ood_cr_file)
-        cr_data = Utils.text_to_rank(cr_data, vocab, 5000)
-        cr_data = Utils.pad_sequences(cr_data, maxlen=self.max_example_len)
+        twitter_data, twitter_labels = self.load_data(self.ood_file)
+        twitter_data = Utils.text_to_rank(twitter_data, vocab, 5000)
+        twitter_data = Utils.pad_sequences(twitter_data, maxlen=self.max_example_len)
 
-        rt_data, rt_labels = self.load_data(self.ood_mr_file)
-        rt_data = Utils.text_to_rank(rt_data, vocab, 5000)
-        rt_data = Utils.pad_sequences(rt_data, maxlen=self.max_example_len)
-
-        printD('IMDB Data loaded')
-        return X_train, Y_train, X_dev, Y_dev, X_test, Y_test, cr_data, cr_labels, rt_data, rt_labels
+        printD('WSJ Data loaded')
+        return X_train, Y_train, X_dev, Y_dev, X_test, Y_test, twitter_data, twitter_labels
 
     def train_model(self):
 
-        X_train, Y_train, X_dev, Y_dev, X_test, Y_test, cr_data, cr_labels, rt_data, rt_labels = self.get_data()
+        X_train, Y_train, X_dev, Y_dev, X_test, Y_test, twitter_data, twitter_labels = self.get_data()
         num_examples = Y_train.shape[0]
         num_batches = num_examples // self.batch_size
 
@@ -121,8 +116,7 @@ class IMDB:
             acc = 100 * tf.reduce_mean(tf.to_float(tf.equal(tf.argmax(logits, 1), y)))
 
             s = tf.nn.softmax(logits)
-            kl_all = tf.log(2.) + tf.reduce_sum(s * tf.log(tf.abs(s) + 1e-10),
-                                                                           reduction_indices=[1], keep_dims=True)
+            kl_all = tf.log(2.) + tf.reduce_sum(s * tf.log(tf.abs(s) + 1e-10), reduction_indices=[1], keep_dims=True)
 
         # initialize
         sess = tf.InteractiveSession(graph=graph)
@@ -136,7 +130,7 @@ class IMDB:
             for epoch in range(self.num_epochs):
                 # shuffle data every epoch
                 indices = np.arange(num_examples)
-                # np.random.seed(0)
+                # np.random.seed(2)
                 np.random.shuffle(indices)
                 X_train = X_train[indices]
                 Y_train = Y_train[indices]
@@ -154,22 +148,21 @@ class IMDB:
                             acc, feed_dict={x: X_dev, y: Y_dev})
                         if best_acc < curr_dev_acc:
                             best_acc = curr_dev_acc
-                            saver.save(sess, './Baseline/Sentiment/data/best_imdb_model.ckpt')
+                            saver.save(sess, './Baseline/POS/data/WSJ/best_wsj_model.ckpt')
 
                 print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
                       (epoch + 1, l, batch_acc, curr_dev_acc))
 
         # restore variables from disk
-        saver.restore(sess, "./Baseline/Sentiment/data/best_imdb_model.ckpt")
+        saver.restore(sess, "./Baseline/POS/data/WSJ/best_wsj_model.ckpt")
         print("Best model restored!")
 
         print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev}))
 
         kl_a = sess.run([kl_all], feed_dict={x: X_test, y: Y_test, is_training: False})
-        kl_oos1 = sess.run([kl_all], feed_dict={x: cr_data, is_training: False})
-        kl_oos2 = sess.run([kl_all], feed_dict={x: rt_data, is_training: False})
+        kl_oos1 = sess.run([kl_all], feed_dict={x: twitter_data, is_training: False})
 
-        return sess, saver, graph, pooled, logits, x, y, is_training, kl_a[0], kl_oos1[0], kl_oos2[0]
+        return sess, saver, graph, pooled, logits, x, y, is_training, kl_a[0], kl_oos1[0]
 
 
 

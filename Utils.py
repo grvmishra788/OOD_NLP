@@ -164,6 +164,9 @@ def init_folders():
     if not os.path.exists(constants.RADIUS_DATA_FOLDER):
         os.makedirs(constants.RADIUS_DATA_FOLDER)
 
+    if not os.path.exists(constants.RESULTS_FOLDER):
+        os.makedirs(constants.RESULTS_FOLDER)
+
     printD(f"Initialized folders at {constants.OUTPUT_FOLDER_NAME}")
 
 

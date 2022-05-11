@@ -41,8 +41,7 @@ def calculate_all(data="Reuters8"):
     ood_set_distances, ood_set_closest_classes = load_arrays.load_OOD_dists_and_closest_classes()
 
     test_logits, ood_logits = load_arrays.load_test_logits(), load_arrays.load_ood_logits()
-    test_energy_score, ood_energy_score = calculate_prob_energy_score(test_logits), calculate_prob_energy_score(
-        ood_logits)
+    test_energy_score, ood_energy_score = calculate_energy_score(test_logits), calculate_energy_score(ood_logits)
     test_soft_score, ood_soft_score = softmax_temp_score(test_logits), softmax_temp_score(ood_logits)
 
     test_ensemble_score, ood_ensemble_score = ensemble(test_distances, ood_set_distances, test_energy_score,
@@ -235,7 +234,7 @@ def calculate_energy_score(logits):
     energy_score = []
     for l in logits:
         energy_score.append(-1 * constants.ENERGY_TEMP * logsumexp(l / constants.ENERGY_TEMP))
-    return energy_score
+    return np.array(energy_score)
 
 
 def calculate_prob_energy_score(logits):

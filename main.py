@@ -13,18 +13,19 @@ from Distance.distance_reuters8 import Reuters8
 from Distance.distance_reuters52 import Reuters52
 from Distance.distance_newsgroup20 import Newsgroup20
 from Distance.Sentiment.distance_IMDB import IMDB
+from Distance.distance_WSJ import WSJ
 import sklearn.metrics as sk
 from pprint import pprint
 import argparse
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Arguements for the OOD detection')
-    parser.add_argument('--energy_temp', default=5,
-                        help='Temperature value for enerrgy based OOD')
+    parser = argparse.ArgumentParser(description='Arguments for the OOD detection')
+    parser.add_argument('--energy_temp', default=2.5,
+                        help='Temperature value for energy based OOD')
     parser.add_argument('--softmax_temp', default=10,
                         help='Temperature value for temperature scaling OOD')
-    parser.add_argument('--retrain', default=False,
+    parser.add_argument('--retrain', default=True,
                         help='retrain')
     parser.add_argument('--debug', default=False,
                         help='debug')
@@ -32,8 +33,8 @@ def main():
                         help='output_folder')
 
     args = parser.parse_args()
-    constants.set_energy_temp(args.energy_temp)
-    constants.set_energy_temp(args.softmax_temp)
+    constants.set_energy_temp(float(args.energy_temp))
+    constants.set_softmax_temp(float(args.softmax_temp))
     constants.set_retrain(args.retrain)
     constants.set_debug(args.debug)
     constants.set_output_folder(args.output_folder)
@@ -57,6 +58,11 @@ def main():
             reuters8 = Newsgroup20()
             in_sample_examples, in_sample_labels, dev_in_sample_examples, \
             dev_in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = reuters8.get_data()
+            sess, saver, graph, fel, logits, x, y, is_training, safe, risky = reuters8.train_model()
+        elif data == "WSJ":
+            constants.set_data_names("WSJ", "Twitter")
+            reuters8 = WSJ()
+            X_dev, Y_dev, in_sample_examples, in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples, oos_labels = reuters8.get_data()
             sess, saver, graph, fel, logits, x, y, is_training, safe, risky = reuters8.train_model()
         elif data == "IMDB_CR":
             constants.set_data_names("IMDB", "CR")
@@ -107,7 +113,7 @@ def main():
         print(f"\n---------------{data}------------------")
         pprint(results)
         print("------------------------------------------\n")
-        results.to_csv(os.path.join("outputs", "results", f"{data}.csv"))
+        results.to_csv(os.path.join(constants.RESULTS_FOLDER, f"{data}.csv"))
 
 
 if __name__ == "__main__":

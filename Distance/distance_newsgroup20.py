@@ -129,7 +129,7 @@ class Newsgroup20:
             is_training = tf.placeholder(tf.bool)
 
             # add one to vocab size for the padding symbol
-            tf.random.set_random_seed(0)
+            # tf.random.set_random_seed(0)
             W_embedding = tf.Variable(
                 tf.random_uniform([self.vocab_size + 1, self.embedding_dims]) / tf.sqrt(
                     (self.vocab_size + 1 + self.embedding_dims) / 6.),
@@ -138,7 +138,7 @@ class Newsgroup20:
             w_vecs = tf.nn.embedding_lookup(W_embedding, x)
             pooled = tf.reduce_mean(w_vecs, reduction_indices=[1])
 
-            tf.random.set_random_seed(0)
+            # tf.random.set_random_seed(0)
             W_out = tf.Variable(
                 tf.nn.l2_normalize(tf.random_normal([self.embedding_dims, 20 - self.nclasses_to_exclude]), 0))
             b_out = tf.Variable(tf.zeros([20 - self.nclasses_to_exclude]))
