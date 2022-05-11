@@ -1,3 +1,5 @@
+import os
+
 import tensorflow.compat.v1 as tf
 import numpy as np
 import re
@@ -186,12 +188,17 @@ class Reuters8:
                 print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
                       (epoch + 1, l, batch_acc, curr_dev_acc))
 
-        # restore variables from disk
-        saver.restore(sess, "Baseline/Categorization/data/best_r8_model.ckpt")
-        print("Best model restored!")
+            # restore variables from disk
+            saver.restore(sess, "Baseline/Categorization/data/best_r8_model.ckpt")
+            print("Best model restored!")
 
-        print('Dev accuracy:',
-              sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
+            print('Dev accuracy:',
+                  sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
+        else:
+            # restore variables from disk
+            saver.restore(sess, os.path.join(constants.MODELS_FOLDER,"best_r8_model.ckpt"))
+            print("Best model restored without retraining!")
+            print('Dev accuracy:', sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
 
         kl_a = sess.run([kl_all], feed_dict={x: in_sample_examples, y: in_sample_labels,  is_training: False})
         kl_oos = sess.run([kl_all], feed_dict={x: oos_examples,  is_training: False})

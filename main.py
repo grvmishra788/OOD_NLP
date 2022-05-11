@@ -21,11 +21,11 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description='Arguments for the OOD detection')
-    parser.add_argument('--energy_temp', default=2.5,
+    parser.add_argument('--energy_temp', default=5,
                         help='Temperature value for energy based OOD')
     parser.add_argument('--softmax_temp', default=10,
                         help='Temperature value for temperature scaling OOD')
-    parser.add_argument('--retrain', default=True,
+    parser.add_argument('--retrain', default=False,
                         help='retrain')
     parser.add_argument('--debug', default=False,
                         help='debug')

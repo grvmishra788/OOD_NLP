@@ -1,3 +1,5 @@
+import os
+
 import tensorflow.compat.v1 as tf
 import numpy as np
 import re
@@ -153,11 +155,16 @@ class WSJ:
                 print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
                       (epoch + 1, l, batch_acc, curr_dev_acc))
 
-        # restore variables from disk
-        saver.restore(sess, "./Baseline/POS/data/WSJ/best_wsj_model.ckpt")
-        print("Best model restored!")
+            # restore variables from disk
+            saver.restore(sess, "./Baseline/POS/data/WSJ/best_wsj_model.ckpt")
+            print("Best model restored!")
 
-        print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev}))
+            print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev, is_training: False}))
+        else:
+            # restore variables from disk
+            saver.restore(sess, os.path.join(constants.MODELS_FOLDER,"best_wsj_model.ckpt"))
+            print("Best model restored without retraining!")
+            print('Dev accuracy:', sess.run(acc, feed_dict={x: X_dev, y: Y_dev, is_training: False}))
 
         kl_a = sess.run([kl_all], feed_dict={x: X_test, y: Y_test, is_training: False})
         kl_oos1 = sess.run([kl_all], feed_dict={x: twitter_data, is_training: False})

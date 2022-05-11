@@ -33,10 +33,9 @@ def calculate_all2(test_distances, ood_set_distances, reverse=False):
 
 def calculate_all(data="Reuters8"):
     """## ** Check output folders**"""
-    Utils.check_all_paths()
+    Utils.check_all_paths(data)
 
     """## **Load data**"""
-    class_radii = load_arrays.load_class_radii()
     test_distances, test_closest_classes = load_arrays.load_test_dists_and_closest_classes()
     ood_set_distances, ood_set_closest_classes = load_arrays.load_OOD_dists_and_closest_classes()
 
@@ -46,6 +45,9 @@ def calculate_all(data="Reuters8"):
 
     test_ensemble_score, ood_ensemble_score = ensemble(test_distances, ood_set_distances, test_energy_score,
                                                        ood_energy_score, test_soft_score, ood_soft_score, data)
+
+    constants.set_softmax_temp(10)
+
     y_true = []
     for i in range(len(test_distances)):
         y_true.append(0)
@@ -87,7 +89,7 @@ def calculate_all(data="Reuters8"):
                         "AUPR_in": calculate_AUPR_in(y_true, test_ensemble_score, ood_ensemble_score),
                         "AUROC": calculate_AUROC(y_true, test_ensemble_score, ood_ensemble_score)}
 
-    if data == "IMDB_CR" or data == "IMDB_MR":
+    if data == "WSJ" or data == "IMDB_CR" or data == "IMDB_MR":
         RESULTS_ENSEMBLE = Utils.calculate_ensemble(RESULTS_ENSEMBLE)
 
     """## **Overall results**"""
@@ -256,11 +258,11 @@ def softmax_temp_score(logits):
 
 def ensemble(test_distances, ood_set_distances, test_energy_score, ood_energy_score, test_soft_score, ood_soft_score, data="Reuters8"):
 
-    W1 = 2
+    W1 = 3
     W2 = 1
     W3 = 1
 
-    if data == "IMDB_CR" or data == "IMDB_MR":
+    if data == "WSJ" or data == "IMDB_CR" or data == "IMDB_MR":
         W1 = 1
         W2 = 1
         W3 = 100*max(abs(test_energy_score))

@@ -167,10 +167,13 @@ def init_folders():
     if not os.path.exists(constants.RESULTS_FOLDER):
         os.makedirs(constants.RESULTS_FOLDER)
 
+    if not os.path.exists(constants.MODELS_FOLDER):
+        os.makedirs(constants.MODELS_FOLDER)
+
     printD(f"Initialized folders at {constants.OUTPUT_FOLDER_NAME}")
 
 
-def check_all_paths():
+def check_all_paths(data):
     check_path(constants.OUTPUT_FOLDER_NAME)
     check_path(constants.FEATURES_DATA_FOLDER)
     check_path(constants.OOD_FEATURES_DATA_FOLDER)
@@ -181,6 +184,9 @@ def check_all_paths():
     check_path(constants.LABELS_DATA_FOLDER)
     check_path(constants.MEANS_DATA_FOLDER)
     check_path(constants.RADIUS_DATA_FOLDER)
+
+    if data == "20NG":
+        constants.set_softmax_temp(150)
 
 
 def get_class_info(in_sample_labels):

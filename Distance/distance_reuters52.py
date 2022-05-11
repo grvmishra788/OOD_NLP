@@ -1,3 +1,5 @@
+import os
+
 import tensorflow.compat.v1 as tf
 import numpy as np
 import re
@@ -77,13 +79,11 @@ class Reuters52:
 
         # shuffle
         indices = np.arange(X_train.shape[0])
-        np.random.seed(0)
         np.random.shuffle(indices)
         X_train = X_train[indices]
         Y_train = Y_train[indices]
 
         indices = np.arange(X_test.shape[0])
-        np.random.seed(0)
         np.random.shuffle(indices)
         X_test = X_test[indices]
         Y_test = Y_test[indices]
@@ -131,7 +131,7 @@ class Reuters52:
             is_training = tf.placeholder(tf.bool)
 
             # add one to vocab size for the padding symbol
-            # tf.random.set_random_seed(0)
+
             W_h = tf.Variable(tf.nn.l2_normalize(tf.random_normal([self.vocab_size, self.n_hidden]), 0) / tf.sqrt(1 + 0.45))
             b_h = tf.Variable(tf.zeros([self.n_hidden]))
 
@@ -142,7 +142,6 @@ class Reuters52:
                         lambda: tf.nn.dropout(gelu_fast(tf.matmul(x, W_h) + b_h), 0.5),
                         lambda: gelu_fast(tf.matmul(x, W_h) + b_h))
 
-            # tf.random.set_random_seed(0)
             W_out = tf.Variable(
                 tf.nn.l2_normalize(tf.random_normal([self.n_hidden, 52 - self.nclasses_to_exclude]), 0) / tf.sqrt(0.45 + 1))
             b_out = tf.Variable(tf.zeros([52 - self.nclasses_to_exclude]))
@@ -172,7 +171,6 @@ class Reuters52:
             for epoch in range(self.num_epochs):
                 # shuffle data every epoch
                 indices = np.arange(num_examples)
-                np.random.seed(0)
                 np.random.shuffle(indices)
                 in_sample_examples = in_sample_examples[indices]
                 in_sample_labels = in_sample_labels[indices]
@@ -195,16 +193,19 @@ class Reuters52:
                 print('Epoch %d | Minibatch loss %.3f | Minibatch accuracy %.3f | Dev accuracy %.3f' %
                       (epoch + 1, l, batch_acc, curr_dev_acc))
 
-        # restore variables from disk
-        saver.restore(sess, "Baseline/Categorization/data/best_r52_model.ckpt")
-        print("Best model restored!")
+            # restore variables from disk
+            saver.restore(sess, "Baseline/Categorization/data/best_r52_model.ckpt")
+            print("Best model restored!")
 
-        print('Dev accuracy:',
-              sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
+            print('Dev accuracy:',
+                  sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
+        else:
+            # restore variables from disk
+            saver.restore(sess, os.path.join(constants.MODELS_FOLDER, "best_r52_model.ckpt"))
+            print("Best model restored without retraining!")
+            print('Dev accuracy:', sess.run(acc, feed_dict={x: dev_in_sample_examples, y: dev_in_sample_labels, is_training: False}))
 
         kl_a = sess.run([kl_all], feed_dict={x: in_sample_examples, y: in_sample_labels, is_training: False})
         kl_oos = sess.run([kl_all], feed_dict={x: oos_examples, is_training: False})
 
         return sess, saver, graph, h, logits, x, y, is_training, kl_a[0], kl_oos[0]
-
-

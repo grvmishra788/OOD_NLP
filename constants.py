@@ -4,7 +4,7 @@ import Utils
 ENERGY_TEMP = 5 #1
 SOFTMAX_TEMP = 10 #2
 
-DATASETS = ["Reuters8", "Reuters52", "20NG", "IMDB_CR", "IMDB_MR"]
+DATASETS = ["Reuters8", "Reuters52", "20NG", "WSJ", "IMDB_CR", "IMDB_MR"]
 
 RE_TRAIN = False #3
 DEBUG = False #4
@@ -52,6 +52,9 @@ RADIUS_DATA_FOLDER = os.path.join(RADIUS_FOLDER, DATA_NAME)
 RESULTS_FOLDER = os.path.join(OUTPUT_FOLDER_NAME, "results")
 RESULTS_FOLDER = os.path.join(RESULTS_FOLDER, DATA_NAME)
 
+# init models folder - independent of data name
+MODELS_FOLDER = os.path.join(OUTPUT_FOLDER_NAME, "models")
+
 
 def set_energy_temp(temp):
     global ENERGY_TEMP
@@ -68,9 +71,9 @@ def set_debug(debug):
     DEBUG = debug
 
 
-def set_retrain(retrian):
+def set_retrain(retrain):
     global RE_TRAIN
-    RE_TRAIN = retrian
+    RE_TRAIN = retrain
 
 
 def set_output_folder(output_folder):
