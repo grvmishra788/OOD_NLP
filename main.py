@@ -75,14 +75,14 @@ def main():
             X_dev, Y_dev, in_sample_examples, in_sample_labels, test_in_sample_examples, test_in_sample_labels, oos_examples1, oos_labels1, oos_examples, oos_labels = reuters8.get_data()
             sess, saver, graph, fel, logits, x, y, is_training, safe, risky1, risky = reuters8.train_model()
 
-        print("---------------In- and out- domain Class Statistics------------------")
+        printD("---------------In- and out- domain Class Statistics------------------")
         total_in_sample_classes = len(list(set(in_sample_labels)))
         total_out_sample_classes = len(list(set(oos_labels)))
-        print(f"Total in-sample test examples = {len(list(test_in_sample_labels))}")
-        print(f"Total out-sample test examples = {len(list(oos_examples))}")
-        print(f"Total in-sample classes = {total_in_sample_classes}")
-        print(f"Total out-sample classes = {total_out_sample_classes}")
-        print("---------------------------------------------------------------------")
+        printD(f"Total in-sample test examples = {len(list(test_in_sample_labels))}")
+        printD(f"Total out-sample test examples = {len(list(oos_examples))}")
+        printD(f"Total in-sample classes = {total_in_sample_classes}")
+        printD(f"Total out-sample classes = {total_out_sample_classes}")
+        printD("---------------------------------------------------------------------")
 
         # get noisy data
         noisy_test_in_sample_examples = noise.add_noise(test_in_sample_examples)
@@ -99,15 +99,11 @@ def main():
         labels = np.zeros((safe.shape[0] + risky.shape[0]), dtype=np.int32)
         labels[:safe.shape[0]] += 1
         examples = np.squeeze(np.vstack((safe, risky)))
-        print('AUPR (%):', round(100 * sk.average_precision_score(labels, examples), 2))
-        print('AUROC (%):', round(100 * sk.roc_auc_score(labels, examples), 2))
-
-        safe = np.squeeze(safe).tolist()
-        risky = np.squeeze(risky).tolist()
+        printD(f'AUPR (%): {round(100 * sk.average_precision_score(labels, examples), 2)}')
+        printD(f'AUROC (%): {round(100 * sk.roc_auc_score(labels, examples), 2)}')
 
         # RESULTS_TEMP, RESULTS_ENERGY, RESULTS_DIST
         a, b, c, d = analysis.calculate_all(data)
-        results['Baseline'] = pd.Series(analysis.calculate_all2(safe, risky, True))
         results['Temp Scaling'], results['Energy'], results['Distance'], results['Ensemble'] = pd.Series(a), pd.Series(b), pd.Series(c), pd.Series(d)
 
         print(f"\n---------------{data}------------------")
